@@ -4,7 +4,7 @@ exports.handler = async function(event) {
   }
 
   const { phone } = JSON.parse(event.body);
-  const API_KEY = 'YOUR_2FACTOR_API_KEY';
+  const API_KEY = '63bc5c00-533a-11f1-9800-0200cd936042';
 
   try {
     const response = await fetch(
