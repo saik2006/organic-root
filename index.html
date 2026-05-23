@@ -6,6 +6,7 @@
 <title>OrganicRoot — Pure. Natural. Delivered.</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" onload="emailjs.init('c2C8dou1OO9ufISuk')" onerror="console.warn('EmailJS failed to load')"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -753,7 +754,7 @@ footer{background:var(--green-dark);color:rgba(255,255,255,0.8);padding:60px 60p
       <button class="otp-resend" onclick="resendOtp()">Resend OTP</button>
     </div>
     <div id="otpDemoHint" style="margin-top:16px;background:#fef9c3;border-radius:10px;padding:10px;font-size:12px;color:#854d0e;">
-      🔑 Demo OTP is <strong>123456</strong>
+    <div id="otpDemoHint" style="display:none;"></div>
     </div>
   </div>
 </div>
@@ -1068,6 +1069,7 @@ let products = [
   { id:11, name:'Full Cream Dahi (500g)', desc:'Set curd from A2 milk, no preservatives', fullDesc:'Made daily from A2 cow milk using live cultures — no stabilisers, no preservatives, no added flavours. Thick, creamy, and probiotic-rich. The culture is a live strain maintained for generations, giving it a distinctive tangy depth.', ingredients:'A2 Cow Milk, Live Cultures', certifications:'A2 Certified, FSSAI Approved', weight:'500g', origin:'Tamil Nadu', price:99, origPrice:120, cat:'dairy', icon:'🥛', badge:'A2 Milk', stock:42, img:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=300&fit=crop' },
   { id:12, name:'Organic Black Pepper', desc:'Malabar whole peppercorns, hand-sorted', fullDesc:'Grown in the spice gardens of Wayanad, these Malabar peppercorns are hand-sorted to remove hollow and defective berries. Sun-dried to develop their essential oils. Bold, complex heat with earthy undertones — nothing like pre-ground pepper.', ingredients:'100% Organic Black Pepper', certifications:'India Organic, FSSAI Certified', weight:'100g', origin:'Wayanad, Kerala', price:199, origPrice:250, cat:'spices', icon:'⚫', badge:'Malabar', stock:38, img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop' },
   { id:13, name:'Organic Ashwagandha Powder', desc:'Pure root powder, no fillers or additives', fullDesc:'Sourced from certified organic farms in Madhya Pradesh, this Ashwagandha is harvested at full root maturity for maximum withanolide content. Stone-ground and sieved to a fine powder. Used in Ayurveda for centuries to reduce stress, improve sleep quality, and boost immunity. Mix 1 tsp in warm milk or water daily.', ingredients:'100% Organic Ashwagandha Root (Withania somnifera)', certifications:'India Organic, FSSAI Certified, Non-GMO', weight:'200g', origin:'Madhya Pradesh', price:349, origPrice:450, cat:'spices', icon:'🌿', badge:'Ayurvedic', stock:40, img:'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop' },
+  { id:14, name:'🧪 Test Product', desc:'For payment gateway testing only', fullDesc:'This is a test product used to verify Razorpay payment integration. Do not purchase.', ingredients:'N/A', certifications:'N/A', weight:'1g', origin:'Test', price:1, origPrice:2, cat:'spices', icon:'🧪', badge:'Test', stock:999, img:'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=400&h=300&fit=crop' },
 ];
 
 let customers = [
@@ -1591,9 +1593,50 @@ function processPayment(amount) {
     if (!num||num.length<16) { showToast('⚠️ Enter valid 16-digit card number'); return; }
   }
   if (paymentMethod==='netbanking' && !selectedBank) { showToast('⚠️ Please select a bank'); return; }
-  document.getElementById('paymentFormArea').style.display = 'none';
-  document.getElementById('processingAnim').classList.add('show');
-  setTimeout(() => { checkoutStep = 4; renderCheckout(); }, 2500);
+
+  const RAZORPAY_KEY = 'YOUR_RAZORPAY_KEY_ID'; // Replace with your test key
+
+  const options = {
+    key: RAZORPAY_KEY,
+    amount: amount * 100, // Razorpay expects paise
+    currency: 'INR',
+    name: 'OrganicRoot',
+    description: 'Fresh Organic Groceries',
+    image: 'https://i.imgur.com/n5tjHFD.png',
+    prefill: {
+      name: checkoutData.name || '',
+      email: checkoutData.email || '',
+      contact: checkoutData.phone || ''
+    },
+    theme: { color: '#2d6a4f' },
+    method: paymentMethod === 'upi' ? { upi: true } :
+            paymentMethod === 'card' ? { card: true } :
+            paymentMethod === 'netbanking' ? { netbanking: true } :
+            paymentMethod === 'wallet' ? { wallet: true } : {},
+    handler: function(response) {
+      // Payment successful
+      checkoutData.razorpayPaymentId = response.razorpay_payment_id;
+      document.getElementById('paymentFormArea').style.display = 'none';
+      document.getElementById('processingAnim').classList.add('show');
+      setTimeout(() => { checkoutStep = 4; renderCheckout(); }, 1000);
+    },
+    modal: {
+      ondismiss: function() {
+        showToast('⚠️ Payment cancelled. Try again.');
+      }
+    }
+  };
+
+  if (typeof Razorpay === 'undefined') {
+    showToast('⚠️ Payment gateway loading... try again in a moment.');
+    return;
+  }
+
+  const rzp = new Razorpay(options);
+  rzp.on('payment.failed', function(response) {
+    showToast('❌ Payment failed: ' + response.error.description);
+  });
+  rzp.open();
 }
 
 function placeOrder() {
@@ -1631,6 +1674,8 @@ function placeOrder() {
     addDoc(collection(db, 'users', user.uid, 'orders'), {
       orderId, items: itemsList, total, address, placedAt: new Date().toISOString(),
       status: 'Confirmed',
+      paymentId: checkoutData.razorpayPaymentId || 'COD',
+      paymentMethod: paymentMethod,
       customerName: checkoutData.name || user.displayName || '',
       customerEmail: checkoutData.email || user.email || ''
     }).catch(() => {});
@@ -1643,6 +1688,8 @@ let authOtpAction = '';
 let authOtpEmail = '';
 let authOtpStep = '';
 
+let otpSessionId = null; // stores 2factor session ID for verification
+
 function openOtpModal(phone, action, step) {
   authOtpPhone = phone;
   authOtpAction = action;
@@ -1650,7 +1697,6 @@ function openOtpModal(phone, action, step) {
   otpType = 'auth';
   const isEmail = authOtpStep === 'email';
 
-  // Generate fresh OTP for email step; keep 123456 for mobile (no SMS gateway yet)
   if (isEmail) {
     generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
     emailjs.send('service_h25a8n8', 'template_ocg76de', {
@@ -1662,20 +1708,42 @@ function openOtpModal(phone, action, step) {
     }).catch(() => {
       showToast('⚠️ Could not send email OTP — check your connection');
     });
+  } else {
+    // Real SMS OTP via 2factor.in
+    sendSmsOtp(phone);
   }
 
   document.getElementById('otpIcon').textContent = isEmail ? '📧' : '📱';
   document.getElementById('otpTitle').textContent = isEmail ? 'Verify Email Address' : 'Verify Mobile Number';
-  document.getElementById('otpSubtitle').textContent = isEmail ? 'Enter the 6-digit OTP sent to your email' : 'Enter the 6-digit OTP sent via SMS (demo: 123456)';
+  document.getElementById('otpSubtitle').textContent = isEmail ? 'Enter the 6-digit OTP sent to your email' : 'Enter the 6-digit OTP sent via SMS';
   document.getElementById('otpSentTo').textContent = isEmail ? 'OTP sent to ' + authOtpEmail : 'OTP sent to ' + phone;
   document.querySelectorAll('.otp-box').forEach(i => { i.value=''; i.classList.remove('filled'); });
   document.getElementById('otpError').style.display = 'none';
   document.getElementById('otpOverlay').classList.add('active');
   const hint = document.getElementById('otpDemoHint');
-  if (hint) hint.style.display = isEmail ? 'none' : 'block';
+  if (hint) hint.style.display = 'none';
   setTimeout(() => document.querySelector('.otp-box').focus(), 100);
   startOtpTimer();
-  if (!isEmail) showToast('📱 OTP sent to ' + phone);
+}
+
+async function sendSmsOtp(phone) {
+  try {
+    showToast('📱 Sending OTP to ' + phone + '...');
+    const res = await fetch('/.netlify/functions/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone.replace(/\D/g,'') })
+    });
+    const data = await res.json();
+    if (data.success) {
+      otpSessionId = data.sessionId;
+      showToast('📱 OTP sent to ' + phone);
+    } else {
+      showToast('⚠️ Could not send OTP: ' + (data.error || 'Try again'));
+    }
+  } catch (err) {
+    showToast('⚠️ SMS service unavailable. Try again.');
+  }
 }
 
 function startOtp(type) {
@@ -1708,7 +1776,18 @@ function resendOtp() {
   document.querySelectorAll('.otp-box').forEach(i => { i.value=''; i.classList.remove('filled'); });
   document.getElementById('otpError').style.display = 'none';
   startOtpTimer();
-  showToast('🔄 OTP resent!');
+  const isEmail = authOtpStep === 'email' || otpType === 'email';
+  if (isEmail) {
+    generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
+    emailjs.send('service_h25a8n8', 'template_ocg76de', {
+      name: document.getElementById('signUpName')?.value?.trim() || 'User',
+      otp: generatedOtp,
+      email: authOtpEmail
+    }).catch(() => {});
+    showToast('📧 OTP resent to email!');
+  } else {
+    sendSmsOtp(authOtpPhone || checkoutData.phone);
+  }
 }
 
 function otpMove(el, idx) {
@@ -1720,35 +1799,72 @@ function otpBack(e, el, idx) {
   if (e.key==='Backspace' && !el.value && idx>0) document.querySelectorAll('.otp-box')[idx-1].focus();
 }
 
-function verifyOtp() {
+async function verifyOtp() {
   const entered = Array.from(document.querySelectorAll('.otp-box')).map(i => i.value).join('');
   if (entered.length < 6) { showToast('⚠️ Enter all 6 digits'); return; }
-  if (entered === generatedOtp) {
-    clearInterval(otpTimerInterval);
-    closeModal('otpOverlay');
-    if (otpType === 'auth') {
-      if (authOtpAction === 'signup' && authOtpStep === 'mobile') {
-        showToast('✅ Mobile verified! Now verify your email.');
-        openOtpModal(authOtpPhone, 'signup', 'email');
-      } else if (authOtpAction === 'signup' && authOtpStep === 'email') {
-        showToast('✅ Account created! Welcome to OrganicRoot 🌿');
-      } else {
-        showToast('✅ Signed in! Welcome to OrganicRoot 🌿');
-        window.currentUser = window.currentUser || { displayName: authOtpPhone, email: '' };
-        const btn = document.getElementById('navAccountBtn');
-        if (btn) { btn.textContent = '👤 ' + authOtpPhone; btn.onclick = () => showPage('account'); }
-      }
+
+  const isEmail = authOtpStep === 'email' || otpType === 'email';
+
+  if (isEmail) {
+    // Email OTP — verify locally
+    if (entered === generatedOtp) {
+      otpSuccess();
     } else {
-      if (otpType==='mobile') checkoutData.mobileVerified = true;
-      else checkoutData.emailVerified = true;
-      showToast(`✅ ${otpType==='mobile'?'Mobile':'Email'} verified!`);
-      renderCheckout();
+      otpFail();
     }
   } else {
-    document.getElementById('otpError').style.display = 'block';
-    document.querySelectorAll('.otp-box').forEach(i => { i.value=''; i.classList.remove('filled'); });
-    document.querySelector('.otp-box').focus();
+    // Mobile OTP — verify via 2factor.in
+    if (!otpSessionId) {
+      // Fallback if session ID missing
+      otpFail();
+      return;
+    }
+    try {
+      const res = await fetch('/.netlify/functions/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: otpSessionId, otp: entered })
+      });
+      const data = await res.json();
+      if (data.success) {
+        otpSuccess();
+      } else {
+        otpFail();
+      }
+    } catch (err) {
+      otpFail();
+    }
   }
+}
+
+function otpSuccess() {
+  clearInterval(otpTimerInterval);
+  closeModal('otpOverlay');
+  otpSessionId = null;
+  if (otpType === 'auth') {
+    if (authOtpAction === 'signup' && authOtpStep === 'mobile') {
+      showToast('✅ Mobile verified! Now verify your email.');
+      openOtpModal(authOtpPhone, 'signup', 'email');
+    } else if (authOtpAction === 'signup' && authOtpStep === 'email') {
+      showToast('✅ Account created! Welcome to OrganicRoot 🌿');
+    } else {
+      showToast('✅ Signed in! Welcome to OrganicRoot 🌿');
+      window.currentUser = window.currentUser || { displayName: authOtpPhone, email: '' };
+      const btn = document.getElementById('navAccountBtn');
+      if (btn) { btn.textContent = '👤 ' + authOtpPhone; btn.onclick = () => showPage('account'); }
+    }
+  } else {
+    if (otpType==='mobile') checkoutData.mobileVerified = true;
+    else checkoutData.emailVerified = true;
+    showToast(`✅ ${otpType==='mobile'?'Mobile':'Email'} verified!`);
+    renderCheckout();
+  }
+}
+
+function otpFail() {
+  document.getElementById('otpError').style.display = 'block';
+  document.querySelectorAll('.otp-box').forEach(i => { i.value=''; i.classList.remove('filled'); });
+  document.querySelector('.otp-box').focus();
 }
 
 // ============ AUTH ============
