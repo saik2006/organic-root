@@ -1405,7 +1405,13 @@ function renderCheckout() {
       <div class="form-group"><label>Delivery Address *</label><textarea placeholder="House no, Street, Area" rows="3" id="coAddress" style="resize:none;width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">${checkoutData.address||''}</textarea></div>
       <div class="form-row">
         <div class="form-group"><label>City *</label><input type="text" placeholder="Chennai" id="coCity" value="${checkoutData.city||''}"></div>
-        <div class="form-group"><label>Pincode *</label><input type="text" placeholder="600001" id="coPincode" value="${checkoutData.pincode||''}"></div>
+        <div class="form-group"><label>Pincode *</label>
+          <div style="display:flex;gap:8px;align-items:flex-start;">
+            <input type="text" placeholder="600001" id="coPincode" value="${checkoutData.pincode||''}" maxlength="6" oninput="checkPincode(this.value)" style="flex:1;">
+            <div id="pincodeStatus" style="font-size:12px;padding:10px 12px;border-radius:8px;white-space:nowrap;display:${checkoutData.pincode?'block':'none'};"></div>
+          </div>
+          <div id="pincodeMsg" style="font-size:12px;margin-top:4px;"></div>
+        </div>
       </div>
       <button class="btn-primary" style="width:100%;" onclick="proceedFromDelivery()">Continue to Payment →</button>
     `;
@@ -1502,7 +1508,10 @@ function renderCheckout() {
       <div id="paymentFormArea">
         <div style="display:flex;gap:12px;margin-top:4px;">
           <button class="btn-outline" onclick="checkoutStep=2;renderCheckout()">← Back</button>
-          <button class="pay-btn-razorpay" style="flex:1;" onclick="processPayment(${grandTotal})">🔒 Pay ₹${grandTotal} Securely</button>
+          ${paymentMethod === 'cod' 
+            ? `<button class="btn-primary" style="flex:1;" onclick="checkoutStep=4;renderCheckout()">Confirm Order →</button>`
+            : `<button class="pay-btn-razorpay" style="flex:1;" onclick="processPayment(${grandTotal})">🔒 Pay ₹${grandTotal} Securely</button>`
+          }
         </div>
       </div>
     `;
@@ -1999,6 +2008,48 @@ function saveProfile() {
     .then(() => updateDoc(doc(db, 'users', window.currentUser.uid), { firstName: first, lastName: last, phone }))
     .then(() => showToast('✅ Profile updated!'))
     .catch(() => showToast('⚠️ Could not save profile'));
+}
+
+// Serviceable pincodes — add your actual delivery areas here
+const serviceablePincodes = [
+  '600001','600002','600003','600004','600005','600006','600007','600008','600009','600010',
+  '600011','600012','600013','600014','600015','600016','600017','600018','600019','600020',
+  '600021','600022','600023','600024','600025','600026','600028','600029','600030','600031',
+  '600032','600033','600034','600035','600036','600037','600038','600039','600040','600041',
+  '600042','600043','600044','600045','600046','600047','600048','600049','600050','600051',
+  '600052','600053','600054','600055','600056','600057','600058','600059','600060','600061',
+  '600062','600063','600064','600065','600066','600067','600068','600069','600070','600071',
+  '600072','600073','600074','600075','600076','600077','600078','600079','600080','600081',
+  '600082','600083','600084','600085','600086','600087','600088','600089','600090','600091',
+  '600092','600093','600094','600095','600096','600097','600098','600099','600100','600101',
+  '600102','600103','600104','600106','600107','600108','600109','600110','600111','600112',
+  '600113','600114','600115','600116','600117','600118','600119','600120','600122','600123',
+  '600124','600125','600126','600128','600129','600130','600132','600133','600134','600135'
+];
+
+function checkPincode(val) {
+  const statusEl = document.getElementById('pincodeStatus');
+  const msgEl = document.getElementById('pincodeMsg');
+  if (!statusEl || !msgEl) return;
+  if (val.length < 6) {
+    statusEl.style.display = 'none';
+    msgEl.textContent = '';
+    return;
+  }
+  statusEl.style.display = 'block';
+  if (serviceablePincodes.includes(val)) {
+    statusEl.style.background = '#dcfce7';
+    statusEl.style.color = '#166534';
+    statusEl.textContent = '✅ Delivery available';
+    msgEl.style.color = '#166534';
+    msgEl.textContent = 'Expected delivery: 1–2 business days';
+  } else {
+    statusEl.style.background = '#fee2e2';
+    statusEl.style.color = '#991b1b';
+    statusEl.textContent = '❌ Not serviceable';
+    msgEl.style.color = '#991b1b';
+    msgEl.textContent = 'We don\'t deliver to this pincode yet. Try a nearby pincode.';
+  }
 }
 
 function saveAddress() {
