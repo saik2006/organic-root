@@ -529,7 +529,7 @@ function setupContactForm() {
 
     try {
       if (window.emailjs) {
-        await window.emailjs.send('service_organicroot', 'template_contact', {
+        await window.emailjs.send('chemsupply-mail', 'template_qg80tgx', {
           from_name: name,
           from_email: email,
           subject: subject || 'Message from OrganicRoot website',
