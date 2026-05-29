@@ -1,2603 +1,667 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OrganicRoot — Pure. Natural. Delivered.</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" onload="emailjs.init('c2C8dou1OO9ufISuk')" onerror="console.warn('EmailJS failed to load')"></script>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, query, where, orderBy, deleteDoc, collectionGroup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrganicRoot — Pure. Natural. Delivered.</title>
+  <meta name="description" content="Fresh organic vegetables, fruits, dairy, and grains delivered to your door. Certified organic, sourced daily from partner farms.">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
+    onload="emailjs.init('YOUR_EMAILJS_PUBLIC_KEY')"
+    onerror="console.warn('EmailJS not loaded')"></script>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, doc, setDoc, getDoc, updateDoc,
+      collection, addDoc, getDocs, query, where, orderBy, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyA4FxrwM8yK2W0QePjfMUrCclcGI6023W8",
-    authDomain: "organicroot-3c2d5.firebaseapp.com",
-    projectId: "organicroot-3c2d5",
-    storageBucket: "organicroot-3c2d5.firebasestorage.app",
-    messagingSenderId: "203213074206",
-    appId: "1:203213074206:web:8dcb5dcacecc1771dea30f"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyA4FxrwM8yK2W0QePjfMUrCclcGI6023W8",
+      authDomain: "organicroot-3c2d5.firebaseapp.com",
+      projectId: "organicroot-3c2d5",
+      storageBucket: "organicroot-3c2d5.firebasestorage.app",
+      messagingSenderId: "203213074206",
+      appId: "1:203213074206:web:8dcb5dcacecc1771dea30f"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  // Expose to global scope for use in non-module scripts
-  window._fb = { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, query, where, orderBy, deleteDoc, collectionGroup };
+    window._fb = {
+      auth, db,
+      createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      signOut: () => signOut(auth),
+      onAuthStateChanged, sendPasswordResetEmail, updateProfile,
+      doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, query, where, orderBy, deleteDoc
+    };
 
-  // Auth state listener
-  onAuthStateChanged(auth, (user) => {
-    window.currentUser = user;
-    const btn = document.getElementById('navAccountBtn');
-    if (btn) btn.textContent = user ? '👤 ' + (user.displayName || 'Account') : '👤 Sign In';
-    if (btn) btn.onclick = user ? () => showPage('account') : openSignIn;
-  });
-</script>
-<style>
-:root {
-  --green: #2d6a4f;
-  --green-dark: #1b4332;
-  --green-light: #52b788;
-  --green-pale: #d8f3dc;
-  --accent: #f4a261;
-  --accent-dark: #e76f51;
-  --text: #1a1a1a;
-  --text-muted: #6b7280;
-  --border: #e5e7eb;
-  --bg: #fafaf8;
-  --white: #ffffff;
-  --red: #dc2626;
-  --shadow: 0 4px 24px rgba(0,0,0,0.08);
-  --shadow-lg: 0 12px 40px rgba(0,0,0,0.14);
-  --radius: 16px;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-h1,h2,h3,h4{font-family:'Playfair Display',serif;}
-
-/* ===== NAV ===== */
-nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 32px;display:flex;align-items:center;gap:20px;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.05);}
-.nav-brand{font-family:'Playfair Display',serif;font-size:22px;font-weight:800;color:var(--green-dark);cursor:pointer;white-space:nowrap;}
-.nav-brand span{color:var(--accent);}
-.nav-links{display:flex;gap:4px;flex:1;}
-.nav-link{padding:6px 14px;border-radius:8px;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all .2s;border:none;background:none;}
-.nav-link:hover{background:var(--green-pale);color:var(--green-dark);}
-.nav-actions{display:flex;gap:8px;align-items:center;margin-left:auto;}
-.btn-icon{background:none;border:1.5px solid var(--border);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:6px;font-weight:600;transition:all .2s;}
-.btn-icon:hover{border-color:var(--green);color:var(--green);}
-.cart-btn{background:var(--green-dark);color:var(--white);border-color:var(--green-dark);}
-.cart-btn:hover{background:var(--green);border-color:var(--green);color:white;}
-.cart-count{background:var(--accent);color:white;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
-
-/* ===== HERO ===== */
-.hero{background:linear-gradient(135deg,rgba(27,67,50,0.88) 0%,rgba(45,106,79,0.80) 60%,rgba(64,145,108,0.75) 100%),url("https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1400&h=600&fit=crop") center/cover no-repeat;min-height:520px;display:flex;align-items:center;padding:60px 60px;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");}
-.hero-text{max-width:580px;position:relative;z-index:1;}
-.hero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:40px;padding:6px 16px;font-size:13px;color:rgba(255,255,255,0.9);margin-bottom:24px;backdrop-filter:blur(10px);}
-.hero h1{font-size:clamp(36px,5vw,62px);font-weight:800;color:white;line-height:1.15;margin-bottom:20px;}
-.hero h1 span{color:#74c69d;}
-.hero p{font-size:18px;color:rgba(255,255,255,0.8);line-height:1.7;margin-bottom:36px;max-width:460px;}
-.hero-btns{display:flex;gap:14px;flex-wrap:wrap;}
-.btn-primary{background:var(--green-dark);color:white;border:none;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
-.btn-primary:hover{background:var(--green);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.2);}
-.btn-outline{background:transparent;border:2px solid var(--border);color:var(--text);padding:12px 24px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
-.btn-outline:hover{border-color:var(--green);color:var(--green);}
-.hero-btn-white{background:white;color:var(--green-dark);padding:14px 28px;border-radius:12px;font-size:15px;font-weight:700;border:none;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
-.hero-btn-white:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.2);}
-.hero-btn-outline{background:transparent;border:2px solid rgba(255,255,255,0.5);color:white;padding:14px 28px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
-.hero-btn-outline:hover{border-color:white;background:rgba(255,255,255,0.1);}
-.hero-stats{position:absolute;right:60px;bottom:60px;display:flex;gap:32px;}
-.stat{text-align:center;}
-.stat-num{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:white;}
-.stat-label{font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;}
-
-/* ===== TRUST BAR ===== */
-.trust-bar{background:var(--green-pale);padding:18px 40px;display:flex;justify-content:center;gap:60px;flex-wrap:wrap;}
-.trust-item{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--green-dark);}
-
-/* ===== SECTIONS ===== */
-.section{padding:80px 60px;}
-.section-header{text-align:center;margin-bottom:48px;}
-.section-header h2{font-size:clamp(28px,4vw,42px);color:var(--green-dark);margin-bottom:12px;}
-.section-header p{font-size:16px;color:var(--text-muted);max-width:520px;margin:0 auto;line-height:1.7;}
-
-/* ===== PRODUCTS ===== */
-.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:28px;}
-.product-card{background:white;border-radius:20px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.06);transition:all .3s;border:1px solid var(--border);}
-.product-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg);}
-.product-img{height:200px;display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;background:linear-gradient(135deg,var(--green-pale),#b7e4c7);}
-.product-badge{position:absolute;top:12px;right:12px;background:var(--accent);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}
-.product-info{padding:20px;}
-.product-info h3{font-size:16px;font-weight:700;color:var(--green-dark);margin-bottom:6px;}
-.product-info p{font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.5;}
-.product-footer{display:flex;align-items:center;justify-content:space-between;}
-.product-price{font-size:20px;font-weight:800;color:var(--green-dark);}
-.product-price span{font-size:13px;font-weight:400;color:var(--text-muted);text-decoration:line-through;margin-left:4px;}
-.add-btn{background:var(--green-dark);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
-.add-btn:hover{background:var(--green);transform:scale(1.05);}
-
-/* ===== CATEGORIES ===== */
-.categories{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;}
-.cat-card{background:white;border-radius:16px;padding:24px 16px;text-align:center;cursor:pointer;border:2px solid var(--border);transition:all .2s;}
-.cat-card:hover{border-color:var(--green);background:var(--green-pale);}
-.cat-card.active{border-color:var(--green-dark);background:var(--green-pale);}
-.cat-icon{font-size:36px;margin-bottom:10px;}
-.cat-name{font-size:13px;font-weight:600;color:var(--green-dark);}
-
-/* ===== CART ===== */
-.cart-sidebar{position:fixed;right:-420px;top:0;width:420px;height:100vh;background:white;z-index:1000;box-shadow:-8px 0 40px rgba(0,0,0,0.12);transition:right .3s ease;display:flex;flex-direction:column;}
-.cart-sidebar.open{right:0;}
-.cart-header{padding:24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.cart-header h3{font-size:20px;color:var(--green-dark);}
-.close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);line-height:1;}
-.cart-body{flex:1;overflow-y:auto;padding:16px;}
-.cart-item{display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:14px;margin-bottom:10px;}
-.cart-item-icon{font-size:36px;width:54px;height:54px;background:var(--green-pale);border-radius:12px;display:flex;align-items:center;justify-content:center;}
-.cart-item-info{flex:1;}
-.cart-item-name{font-size:14px;font-weight:600;color:var(--green-dark);}
-.cart-item-price{font-size:13px;color:var(--text-muted);margin-top:2px;}
-.qty-controls{display:flex;align-items:center;gap:8px;}
-.qty-btn{background:var(--green-pale);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;font-weight:700;color:var(--green-dark);display:flex;align-items:center;justify-content:center;}
-.qty-num{font-weight:700;font-size:15px;min-width:20px;text-align:center;}
-.cart-footer{padding:20px;border-top:1px solid var(--border);}
-.cart-total{display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:var(--green-dark);margin-bottom:16px;}
-.empty-cart{text-align:center;padding:60px 20px;color:var(--text-muted);}
-.empty-cart-icon{font-size:64px;margin-bottom:16px;}
-
-/* ===== OVERLAY ===== */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(4px);}
-.overlay.active{opacity:1;pointer-events:all;}
-.modal{background:white;border-radius:24px;padding:36px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 24px 80px rgba(0,0,0,0.2);}
-.modal-close{position:absolute;top:16px;right:20px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);}
-.modal h2{font-size:24px;color:var(--green-dark);margin-bottom:8px;}
-.modal p{font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.6;}
-
-/* ===== CHECKOUT ===== */
-.page-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(4px);}
-.page-overlay.active{opacity:1;pointer-events:all;}
-.checkout-modal{background:white;border-radius:24px;max-width:560px;width:94%;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column;}
-.checkout-header{background:linear-gradient(135deg,var(--green-dark),var(--green));padding:24px 28px;border-radius:24px 24px 0 0;color:white;}
-.checkout-header h3{font-size:20px;margin-bottom:12px;}
-.step-bar{display:flex;gap:8px;}
-.step-dot{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.25);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);transition:all .3s;}
-.step-dot.active{background:white;color:var(--green-dark);}
-.step-dot.done{background:var(--green-light);color:white;}
-.step-dot.done::after{content:'✓';}
-.step-label{font-size:10px;text-align:center;color:rgba(255,255,255,0.6);margin-top:4px;}
-.checkout-body{padding:28px;flex:1;}
-.form-group{margin-bottom:18px;}
-.form-group label{display:block;font-size:13px;font-weight:600;color:var(--green-dark);margin-bottom:6px;}
-.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;background:var(--bg);}
-.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--green);}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.order-summary{background:var(--bg);border-radius:16px;padding:18px;margin-bottom:24px;}
-.order-summary h4{font-size:15px;color:var(--green-dark);margin-bottom:14px;}
-.order-item{display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;}
-.order-divider{border:none;border-top:1px solid var(--border);margin:12px 0;}
-.order-total{display:flex;justify-content:space-between;font-weight:700;font-size:16px;color:var(--green-dark);}
-
-/* ===== PAYMENT ===== */
-.razorpay-header{background:linear-gradient(135deg,#1e293b,#0f172a);padding:14px 20px;border-radius:14px 14px 0 0;display:flex;align-items:center;gap:12px;color:rgba(255,255,255,0.7);font-size:12px;margin-bottom:0;}
-.razorpay-secure{background:#f8fafc;border:1px solid #e2e8f0;border-radius:0 0 14px 14px;padding:10px 20px;font-size:13px;color:var(--text-muted);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
-.payment-methods{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
-.payment-method{border:2px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;font-size:12px;font-weight:600;}
-.payment-method:hover{border-color:var(--green);}
-.payment-method.selected{border-color:var(--green-dark);background:var(--green-pale);}
-.upi-apps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
-.upi-app{border:2px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;font-size:12px;font-weight:600;}
-.upi-app:hover{border-color:var(--green);}
-.upi-app.selected{border-color:var(--green-dark);background:var(--green-pale);}
-.app-icon{display:block;font-size:24px;margin-bottom:6px;}
-.card-network{display:flex;gap:8px;margin-bottom:16px;font-size:12px;font-weight:700;color:var(--text-muted);}
-.card-network span{background:#f1f5f9;padding:4px 10px;border-radius:6px;}
-.netbank-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
-.netbank-item{border:2px solid var(--border);border-radius:10px;padding:12px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;}
-.netbank-item:hover{border-color:var(--green);}
-.netbank-item.selected{border-color:var(--green-dark);background:var(--green-pale);}
-.pay-btn-razorpay{background:linear-gradient(135deg,#528ff0,#2563eb);color:white;border:none;padding:16px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;width:100%;}
-.pay-btn-razorpay:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(37,99,235,0.3);}
-.processing-anim{display:none;text-align:center;padding:40px 20px;}
-.processing-anim.show{display:block;}
-.spinner{width:48px;height:48px;border:4px solid var(--green-pale);border-top-color:var(--green);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* ===== OTP ===== */
-.otp-boxes{display:flex;gap:10px;justify-content:center;margin:24px 0;}
-.otp-box{width:52px;height:60px;border:2px solid var(--border);border-radius:14px;font-size:24px;font-weight:700;text-align:center;outline:none;transition:all .2s;background:var(--bg);font-family:'DM Sans',sans-serif;}
-.otp-box:focus{border-color:var(--green);background:white;transform:scale(1.05);}
-.otp-box.filled{border-color:var(--green-light);background:var(--green-pale);}
-.otp-error{color:var(--red);font-size:13px;text-align:center;margin-top:-16px;display:none;}
-.otp-timer{display:flex;justify-content:center;gap:8px;font-size:13px;color:var(--text-muted);margin-top:16px;align-items:center;}
-.otp-resend{color:var(--green);font-weight:600;cursor:pointer;background:none;border:none;font-size:13px;}
-
-/* ===== SUCCESS ===== */
-.success-screen{text-align:center;padding:20px 0;}
-.success-icon{font-size:72px;margin-bottom:16px;animation:bounce .6s ease;}
-@keyframes bounce{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
-
-/* ===== FOOTER ===== */
-footer{background:var(--green-dark);color:rgba(255,255,255,0.8);padding:60px 60px 32px;}
-.footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1.2fr;gap:48px;margin-bottom:48px;}
-.footer-brand{font-family:'Playfair Display',serif;font-size:22px;font-weight:800;color:white;margin-bottom:14px;}
-.footer-brand span{color:var(--accent);}
-.footer-desc{font-size:14px;line-height:1.7;color:rgba(255,255,255,0.6);margin-bottom:20px;}
-.footer-social{display:flex;gap:10px;}
-.social-btn{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-.social-btn:hover{background:var(--green-light);}
-.footer-col h4{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.9);margin-bottom:18px;}
-.footer-link{display:block;font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:10px;cursor:pointer;text-decoration:none;transition:color .2s;border:none;background:none;text-align:left;padding:0;font-family:'DM Sans',sans-serif;}
-.footer-link:hover{color:white;}
-.newsletter-form{display:flex;gap:8px;flex-direction:column;}
-.newsletter-form input{padding:11px 14px;border:1.5px solid rgba(255,255,255,0.2);border-radius:10px;background:rgba(255,255,255,0.07);color:white;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;}
-.newsletter-form input::placeholder{color:rgba(255,255,255,0.4);}
-.newsletter-form input:focus{border-color:var(--green-light);}
-.newsletter-btn{background:var(--accent);color:white;border:none;padding:11px;border-radius:10px;font-weight:600;cursor:pointer;font-size:14px;}
-.footer-bottom{border-top:1px solid rgba(255,255,255,0.1);padding-top:24px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:rgba(255,255,255,0.4);}
-
-/* ===== PAGE CONTENT ===== */
-.page-content{display:none;padding:60px;}
-.page-content.active{display:block;}
-.page-hero{background:linear-gradient(135deg,var(--green-dark),var(--green));color:white;border-radius:20px;padding:48px;margin-bottom:40px;}
-.page-hero h1{font-size:36px;margin-bottom:12px;}
-.page-hero p{font-size:16px;opacity:0.85;max-width:500px;line-height:1.7;}
-
-/* ===== WHATSAPP ===== */
-.wa-float{position:fixed;bottom:28px;right:28px;z-index:999;}
-.wa-btn{background:#25d366;color:white;border:none;border-radius:50%;width:60px;height:60px;font-size:28px;cursor:pointer;box-shadow:0 6px 24px rgba(37,211,102,0.5);display:flex;align-items:center;justify-content:center;transition:all .3s;}
-.wa-btn:hover{transform:scale(1.1);box-shadow:0 10px 32px rgba(37,211,102,0.6);}
-.wa-popup{position:absolute;bottom:74px;right:0;background:white;border-radius:20px;box-shadow:0 12px 48px rgba(0,0,0,0.16);width:300px;overflow:hidden;opacity:0;transform:scale(0.9) translateY(10px);transform-origin:bottom right;transition:all .25s;pointer-events:none;}
-.wa-popup.open{opacity:1;transform:scale(1) translateY(0);pointer-events:all;}
-.wa-popup-header{background:#075e54;color:white;padding:16px 20px;}
-.wa-popup-header h4{font-size:15px;margin-bottom:4px;}
-.wa-popup-header p{font-size:12px;opacity:0.7;}
-.wa-options{padding:12px;}
-.wa-option{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;cursor:pointer;transition:background .2s;font-size:14px;}
-.wa-option:hover{background:var(--green-pale);}
-.wa-option-icon{width:40px;height:40px;background:var(--green-pale);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-
-/* ===== TOAST ===== */
-.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:white;padding:12px 24px;border-radius:40px;font-size:14px;font-weight:500;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-/* ===== NOTIF BANNER ===== */
-.notif-banner{position:fixed;top:-100px;left:50%;transform:translateX(-50%);background:var(--green-dark);color:white;padding:16px 28px;border-radius:16px;font-size:14px;font-weight:500;z-index:9999;box-shadow:var(--shadow-lg);transition:top .4s ease;min-width:340px;text-align:center;}
-.notif-banner.show{top:80px;}
-
-/* ===== ADMIN ===== */
-.admin-login{max-width:420px;margin:80px auto;background:white;border-radius:24px;padding:40px;box-shadow:var(--shadow-lg);}
-.admin-login h2{color:var(--green-dark);margin-bottom:8px;}
-.admin-panel{display:none;min-height:100vh;background:#f1f5f9;}
-.admin-nav{background:var(--green-dark);padding:0 24px;height:60px;display:flex;align-items:center;gap:20px;}
-.admin-nav .brand{font-family:'Playfair Display',serif;font-size:18px;color:white;font-weight:800;}
-.admin-tab-btn{background:none;border:none;color:rgba(255,255,255,0.65);font-size:14px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
-.admin-tab-btn.active,.admin-tab-btn:hover{background:rgba(255,255,255,0.15);color:white;}
-.admin-logout{margin-left:auto;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;}
-.admin-content{padding:32px;}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:32px;}
-.stat-card{background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.05);}
-.stat-card-num{font-size:32px;font-weight:800;color:var(--green-dark);font-family:'Playfair Display',serif;}
-.stat-card-label{font-size:13px;color:var(--text-muted);margin-top:4px;}
-.stat-card-icon{font-size:28px;margin-bottom:12px;}
-.admin-table{background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.05);}
-.admin-table table{width:100%;border-collapse:collapse;}
-.admin-table th{background:#f8fafc;padding:14px 20px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;}
-.admin-table td{padding:14px 20px;border-top:1px solid var(--border);font-size:14px;}
-.admin-table tr:hover td{background:#fafafa;}
-.badge{display:inline-flex;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
-.badge-green{background:#dcfce7;color:#166534;}
-.badge-yellow{background:#fef9c3;color:#854d0e;}
-.badge-blue{background:#dbeafe;color:#1e40af;}
-.badge-red{background:#fee2e2;color:#991b1b;}
-.admin-section{display:none;}
-.admin-section.active{display:block;}
-.admin-section-title{font-size:22px;color:var(--green-dark);margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;}
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:768px){
-  #productDetailContent{grid-template-columns:1fr !important;}
-  nav{padding:0 12px;gap:8px;}
-  .nav-links{display:none;}
-  .nav-actions{gap:6px;}
-  .btn-icon{padding:7px 10px;font-size:13px;}
-  .nav-brand{font-size:18px;}
-  .hero{padding:36px 20px;flex-direction:column;min-height:420px;}
-  .hero h1{font-size:32px;}
-  .hero p{font-size:15px;}
-  .hero-stats{position:static;margin-top:32px;gap:20px;flex-wrap:wrap;}
-  .hero-btns{flex-direction:column;gap:10px;}
-  .hero-btn-white,.hero-btn-outline{width:100%;text-align:center;}
-  .section{padding:36px 20px;}
-  .section-title{font-size:26px;}
-  .products-grid{grid-template-columns:repeat(2,1fr) !important;gap:14px;}
-  .product-card{border-radius:12px;}
-  .product-img{height:160px;}
-  .product-info{padding:12px;}
-  .product-name{font-size:14px;}
-  .footer-grid{grid-template-columns:1fr;}
-  footer{padding:40px 20px;}
-  .trust-bar{gap:20px;padding:16px 20px;}
-  .trust-item{font-size:13px;}
-  .stats-grid{grid-template-columns:repeat(2,1fr);}
-  .form-row{grid-template-columns:1fr;}
-  .checkout-modal{max-width:100%;height:100vh;border-radius:0;}
-  .cart-sidebar{width:100vw !important;max-width:100vw !important;}
-  .admin-section-title{flex-direction:column;align-items:flex-start;gap:10px;font-size:18px;}
-  .admin-table{overflow-x:auto;}
-  .admin-tab-btn{font-size:12px;padding:8px 12px;}
-  .page-modal{width:95vw;max-height:90vh;overflow-y:auto;}
-  .overlay-box{width:95vw;padding:24px 20px;}
-  .account-tabs{gap:8px;}
-  .account-tab-btn{font-size:13px;padding:8px 12px;}
-}
-@media(max-width:480px){
-  .products-grid{grid-template-columns:1fr !important;}
-  .hero h1{font-size:28px;}
-  .hero-stats{gap:16px;}
-  .stat-num{font-size:24px;}
-  .btn-icon{padding:6px 8px;font-size:12px;}
-}
-</style>
+    onAuthStateChanged(auth, (user) => {
+      window.currentUser = user;
+      const btn = document.getElementById('nav-account-btn');
+      if (btn) {
+        btn.textContent = user ? '👤 ' + (user.displayName?.split(' ')[0] || 'Account') : '👤 Sign In';
+        btn.onclick = user ? () => showPage('account') : openSignIn;
+      }
+      if (window.currentPage === 'account') renderAccountPage();
+    });
+  </script>
 </head>
 <body>
 
-<!-- NAV -->
-<nav id="mainNav">
-  <div class="nav-brand" onclick="showHome()">Organic<span>Root</span></div>
+<!-- ══════════════════════════════════════════════════════
+     NAVIGATION
+══════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-brand" onclick="showPage('home')">Organic<em>Root</em></div>
   <div class="nav-links">
-    <button class="nav-link" onclick="showHome()">Home</button>
+    <button class="nav-link" onclick="showPage('home')">Home</button>
     <button class="nav-link" onclick="showPage('shop')">Shop</button>
-    <button class="nav-link" onclick="showPage('about')">About</button>
-    <button class="nav-link" onclick="showPage('blog')">Blog</button>
+    <button class="nav-link" onclick="showPage('blog')">Journal</button>
+    <button class="nav-link" onclick="showPage('track')">Track Order</button>
+    <button class="nav-link" onclick="showPage('contact')">Contact</button>
   </div>
   <div class="nav-actions">
-    <button class="btn-icon" id="navAccountBtn" onclick="openSignIn()">👤 Sign In</button>
-    <button class="btn-icon cart-btn" onclick="toggleCart()">🛒 Cart <span class="cart-count" id="cartCount">0</span></button>
-    <button class="btn-icon" onclick="showAdminLogin()" style="border-color:var(--green);color:var(--green);">⚙️ Admin</button>
+    <button class="btn-nav" id="nav-account-btn" onclick="openSignIn()">👤 Sign In</button>
+    <button class="btn-nav btn-cart" onclick="openCart()">
+      🧺 Cart
+      <span class="cart-badge" style="display:none">0</span>
+    </button>
   </div>
 </nav>
 
-<!-- MAIN SITE -->
-<div id="mainSite">
-  <!-- HERO -->
-  <div class="hero" id="heroSection">
-    <div class="hero-text">
-      <div class="hero-tag">🌿 100% Certified Organic</div>
-      <h1>Pure Food,<br><span>Honest Farms,</span><br>Your Doorstep.</h1>
-      <p>From hand-picked farms to your home — fresh, certified organic produce with zero compromise. No pesticides. No preservatives. Just real food.</p>
+<!-- ══════════════════════════════════════════════════════
+     PAGE: HOME
+══════════════════════════════════════════════════════ -->
+<div id="page-home" class="page active">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-tag">Certified Organic · Delivered Daily</div>
+      <h1>Farm-fresh organic<br><em>groceries</em>, at your door.</h1>
+      <p class="hero-sub">We source directly from partner farms every morning. No middlemen, no chemicals, no compromise on freshness.</p>
       <div class="hero-btns">
-        <button class="hero-btn-white" onclick="scrollToProducts()">Shop Now 🛒</button>
-        <button class="hero-btn-outline" onclick="showPage('about')">Our Story</button>
+        <button class="btn-primary" onclick="showPage('shop')">Shop Now</button>
+        <button class="btn-ghost" onclick="showPage('blog')">Our Story</button>
       </div>
     </div>
     <div class="hero-stats">
-      <div class="stat"><div class="stat-num">12K+</div><div class="stat-label">Happy Customers</div></div>
-      <div class="stat"><div class="stat-num">48</div><div class="stat-label">Farm Partners</div></div>
-      <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Organic Certified</div></div>
+      <div class="stat">
+        <div class="stat-num">12K+</div>
+        <div class="stat-label">Happy Customers</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">48</div>
+        <div class="stat-label">Partner Farms</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Certified Organic</div>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- TRUST BAR -->
+  <!-- Trust Bar -->
   <div class="trust-bar">
-    <div class="trust-item">🌱 USDA Certified Organic</div>
-    <div class="trust-item">🚚 Free Delivery over ₹499</div>
-    <div class="trust-item">↩️ 7-Day Easy Returns</div>
-    <div class="trust-item">🔒 Secure Payments</div>
-    <div class="trust-item">⭐ 4.9/5 Customer Rating</div>
+    <div class="trust-item"><div class="ti-icon">🌱</div> 100% Certified Organic</div>
+    <div class="trust-item"><div class="ti-icon">🚚</div> Same-Day Delivery</div>
+    <div class="trust-item"><div class="ti-icon">🔄</div> Easy Returns</div>
+    <div class="trust-item"><div class="ti-icon">❄️</div> Cold Chain Maintained</div>
+    <div class="trust-item"><div class="ti-icon">💳</div> Secure Payments</div>
   </div>
 
-  <!-- CATEGORIES -->
-  <div class="section" style="padding-bottom:0;">
+  <!-- Featured Products -->
+  <section class="section">
     <div class="section-header">
-      <h2>Shop by Category</h2>
-      <p>Fresh, certified organic goodness across every food group</p>
+      <div class="section-tag">Fresh Picks</div>
+      <h2>Today's Best of the Farm</h2>
+      <p>Harvested this morning, arriving at your door by evening. Every item certified organic.</p>
     </div>
-    <div class="categories" id="categoriesGrid">
-      <div class="cat-card active" onclick="filterCat('all',this)"><div class="cat-icon">🌿</div><div class="cat-name">All</div></div>
-      <div class="cat-card" onclick="filterCat('vegetables',this)"><div class="cat-icon">🥦</div><div class="cat-name">Vegetables</div></div>
-      <div class="cat-card" onclick="filterCat('fruits',this)"><div class="cat-icon">🍎</div><div class="cat-name">Fruits</div></div>
-      <div class="cat-card" onclick="filterCat('dairy',this)"><div class="cat-icon">🥛</div><div class="cat-name">Dairy</div></div>
-      <div class="cat-card" onclick="filterCat('grains',this)"><div class="cat-icon">🌾</div><div class="cat-name">Grains</div></div>
-      <div class="cat-card" onclick="filterCat('oils',this)"><div class="cat-icon">🫙</div><div class="cat-name">Oils & Ghee</div></div>
-      <div class="cat-card" onclick="filterCat('spices',this)"><div class="cat-icon">🌶️</div><div class="cat-name">Spices</div></div>
-      <div class="cat-card" onclick="filterCat('honey',this)"><div class="cat-icon">🍯</div><div class="cat-name">Honey</div></div>
+    <div id="home-products" class="products-grid">
+      <!-- Populated by JS -->
     </div>
-  </div>
+    <div style="text-align:center;margin-top:40px">
+      <button class="btn-primary" onclick="showPage('shop')">View All Products →</button>
+    </div>
+  </section>
 
-  <!-- PRODUCTS -->
-  <div class="section" id="productsSection">
+  <!-- Why OrganicRoot -->
+  <section class="section section-alt">
     <div class="section-header">
-      <h2>Fresh Organic Picks</h2>
-      <p>Sourced directly from certified organic farms across India</p>
+      <div class="section-tag">Why Choose Us</div>
+      <h2>The OrganicRoot Difference</h2>
+      <p>Anyone can claim organic. Here's exactly what we mean by it and how we back it up.</p>
     </div>
-    <div style="max-width:480px;margin:0 auto 28px;position:relative;">
-      <input type="text" id="productSearch" placeholder="🔍 Search products..." oninput="searchProducts(this.value)" style="width:100%;padding:14px 20px;border:2px solid var(--green-pale);border-radius:40px;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:.2s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--green-pale)'">
-    </div>
-    <div class="products-grid" id="productsGrid"></div>
-  </div>
-</div>
-
-<!-- PAGE CONTENT SECTIONS -->
-<div class="page-content" id="page-about">
-  <div style="max-width:900px;margin:0 auto;">
-    <div class="page-hero">
-      <h1>🌿 Our Story</h1>
-      <p>OrganicRoot was born from a simple belief: everyone deserves food that's truly pure. We partner with over 48 certified organic farms across India to bring you honest, chemical-free produce.</p>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:40px;">
-      <div id="section-farmpartners" style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-        <div style="font-size:36px;margin-bottom:12px;">🌾</div>
-        <h3 style="color:var(--green-dark);margin-bottom:8px;">Farm Partners</h3>
-        <p style="color:var(--text-muted);line-height:1.7;">We work directly with 48+ certified organic farmers, ensuring fair wages and sustainable practices.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🌿</div>
+        <h3>Certified & Verified</h3>
+        <p>Every farm partner holds NPOP or PGS certification. We audit annually and share documents on request.</p>
       </div>
-      <div id="section-certifications" style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-        <div style="font-size:36px;margin-bottom:12px;">🏆</div>
-        <h3 style="color:var(--green-dark);margin-bottom:8px;">Certifications</h3>
-        <p style="color:var(--text-muted);line-height:1.7;">USDA Organic, India Organic, and FSSAI certified. Every product meets the highest standards.</p>
+      <div class="feature-card">
+        <div class="feature-icon">🚜</div>
+        <h3>Direct from Farms</h3>
+        <p>We buy directly. No wholesale markets, no cold-storage intermediaries, no unnecessary handling.</p>
       </div>
-      <div id="section-sustainability" style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-        <div style="font-size:36px;margin-bottom:12px;">♻️</div>
-        <h3 style="color:var(--green-dark);margin-bottom:8px;">Sustainability</h3>
-        <p style="color:var(--text-muted);line-height:1.7;">Zero plastic packaging, carbon-neutral deliveries, and 1% of revenue goes to reforestation.</p>
+      <div class="feature-card">
+        <div class="feature-icon">❄️</div>
+        <h3>Cold Chain Intact</h3>
+        <p>Temperature-controlled vehicles from farm to your door. Freshness isn't a claim — it's infrastructure.</p>
       </div>
-      <div id="section-careers" style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-        <div style="font-size:36px;margin-bottom:12px;">💼</div>
-        <h3 style="color:var(--green-dark);margin-bottom:8px;">Careers</h3>
-        <p style="color:var(--text-muted);line-height:1.7;">Join our mission. We're hiring passionate people who care about food, people, and the planet.</p>
+      <div class="feature-card">
+        <div class="feature-icon">🔁</div>
+        <h3>No-Fuss Returns</h3>
+        <p>Something not up to standard? Instant refund or replacement, no questions asked.</p>
       </div>
     </div>
-    <button class="btn-primary" onclick="showHome()">← Back to Shop</button>
-  </div>
-</div>
+  </section>
 
-<div class="page-content" id="page-shop">
-  <div style="max-width:1000px;margin:0 auto;">
-    <h2 style="color:var(--green-dark);margin-bottom:24px;">🛒 All Products</h2>
-    <div class="products-grid" id="shopProductsGrid"></div>
-    <div style="margin-top:32px;"><button class="btn-primary" onclick="showHome()">← Back</button></div>
-  </div>
-</div>
-
-<div class="page-content" id="page-blog">
-  <div style="max-width:800px;margin:0 auto;">
-    <h2 style="color:var(--green-dark);margin-bottom:8px;">📝 OrganicRoot Blog</h2>
-    <p style="color:var(--text-muted);margin-bottom:32px;">Tips, stories, and insights from the organic world</p>
-    <div style="display:flex;flex-direction:column;gap:20px;">
-      <div style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-        <div style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:8px;">🌿 Farming</div>
-        <h3 style="color:var(--green-dark);margin-bottom:10px;">Why Organic Farming Is the Future of Food</h3>
-        <p style="color:var(--text-muted);line-height:1.7;">Conventional farming strips the soil of nutrients. Organic practices restore and build the earth...</p>
-        <button class="btn-outline" style="margin-top:16px;padding:8px 16px;font-size:13px;">Read More →</button>
-      </div>
-      <div style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-        <div style="font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:8px;">🥗 Nutrition</div>
-        <h3 style="color:var(--green-dark);margin-bottom:10px;">10 Organic Foods You Should Eat Every Week</h3>
-        <p style="color:var(--text-muted);line-height:1.7;">From leafy greens to heritage grains, these ten foods will transform your health...</p>
-        <button class="btn-outline" style="margin-top:16px;padding:8px 16px;font-size:13px;">Read More →</button>
-      </div>
+  <!-- Testimonials -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-tag">What Customers Say</div>
+      <h2>Real People, Real Results</h2>
     </div>
-    <div style="margin-top:32px;"><button class="btn-primary" onclick="showHome()">← Back</button></div>
-  </div>
-</div>
-
-<div class="page-content" id="page-track">
-  <div style="max-width:520px;margin:0 auto;">
-    <div class="page-hero"><h1>📦 Track Your Order</h1><p>Enter your order ID to check live delivery status.</p></div>
-    <div style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-      <div class="form-group"><label>Order ID</label><input type="text" placeholder="#ORG-2901" id="trackOrderId"></div>
-      <div class="form-group"><label>Mobile / Email</label><input type="text" placeholder="Your registered mobile or email"></div>
-      <button class="btn-primary" style="width:100%;" onclick="trackOrder()">Track Order →</button>
-      <div id="trackResult" style="display:none;margin-top:20px;background:var(--green-pale);border-radius:12px;padding:18px;">
-        <div style="font-weight:700;color:var(--green-dark);margin-bottom:8px;">📦 Order Found!</div>
-        <div style="font-size:14px;color:var(--text-muted);">Status: <strong style="color:var(--green);">Out for Delivery</strong></div>
-        <div style="font-size:14px;color:var(--text-muted);margin-top:4px;">Expected: Today by 7 PM</div>
-      </div>
-    </div>
-    <div style="margin-top:24px;"><button class="btn-primary" onclick="showHome()">← Back</button></div>
-  </div>
-</div>
-
-<div class="page-content" id="page-returns">
-  <div style="max-width:700px;margin:0 auto;">
-    <div class="page-hero"><h1>↩️ Returns Policy</h1><p>Easy, hassle-free returns within 7 days of delivery.</p></div>
-    <div style="background:white;border-radius:16px;padding:32px;box-shadow:var(--shadow);">
-      <h3 style="color:var(--green-dark);margin-bottom:16px;">Our Return Policy</h3>
-      <p style="color:var(--text-muted);line-height:1.8;margin-bottom:16px;">We want you to be 100% happy with your order. If for any reason you're not, here's what to know:</p>
-      <ul style="color:var(--text-muted);line-height:2;padding-left:20px;">
-        <li>Returns accepted within 7 days of delivery</li>
-        <li>Products must be unused and in original packaging</li>
-        <li>Perishable items are non-returnable but we offer full replacements</li>
-        <li>Refund processed within 3-5 business days</li>
-        <li>Contact us via WhatsApp for fastest resolution</li>
-      </ul>
-    </div>
-    <div style="margin-top:24px;"><button class="btn-primary" onclick="showHome()">← Back</button></div>
-  </div>
-</div>
-
-<div class="page-content" id="page-faq">
-  <div style="max-width:700px;margin:0 auto;">
-    <div class="page-hero"><h1>❓ FAQ</h1><p>Answers to our most commonly asked questions.</p></div>
-    <div style="display:flex;flex-direction:column;gap:14px;">
-      <div style="background:white;border-radius:14px;padding:22px;box-shadow:var(--shadow);">
-        <h4 style="color:var(--green-dark);margin-bottom:8px;">Are all products certified organic?</h4>
-        <p style="color:var(--text-muted);font-size:14px;line-height:1.7;">Yes! Every product carries at least one of: USDA Organic, India Organic, or FSSAI certification.</p>
-      </div>
-      <div style="background:white;border-radius:14px;padding:22px;box-shadow:var(--shadow);">
-        <h4 style="color:var(--green-dark);margin-bottom:8px;">How long does delivery take?</h4>
-        <p style="color:var(--text-muted);font-size:14px;line-height:1.7;">Standard delivery is 2–3 business days. Express delivery (same/next day) is available in select cities.</p>
-      </div>
-      <div style="background:white;border-radius:14px;padding:22px;box-shadow:var(--shadow);">
-        <h4 style="color:var(--green-dark);margin-bottom:8px;">Do you offer wholesale / bulk orders?</h4>
-        <p style="color:var(--text-muted);font-size:14px;line-height:1.7;">Yes! Contact us via WhatsApp or email for wholesale pricing and corporate orders.</p>
-      </div>
-      <div style="background:white;border-radius:14px;padding:22px;box-shadow:var(--shadow);">
-        <h4 style="color:var(--green-dark);margin-bottom:8px;">Is my payment secure?</h4>
-        <p style="color:var(--text-muted);font-size:14px;line-height:1.7;">Absolutely. Payments are processed through Razorpay with 256-bit SSL encryption and 3D Secure.</p>
-      </div>
-    </div>
-    <div style="margin-top:24px;"><button class="btn-primary" onclick="showHome()">← Back</button></div>
-  </div>
-</div>
-
-<div class="page-content" id="page-contact">
-  <div style="max-width:600px;margin:0 auto;">
-    <div class="page-hero"><h1>📞 Contact Us</h1><p>We're here to help. Reach out via any channel below.</p></div>
-    <div style="background:white;border-radius:16px;padding:32px;box-shadow:var(--shadow);">
-      <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:28px;">
-        <div style="display:flex;gap:14px;align-items:center;"><div style="width:44px;height:44px;background:var(--green-pale);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📧</div><div><div style="font-weight:600;color:var(--green-dark);">Email</div><div style="color:var(--text-muted);font-size:14px;">hello@organicroot.in</div></div></div>
-        <div style="display:flex;gap:14px;align-items:center;"><div style="width:44px;height:44px;background:var(--green-pale);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📱</div><div><div style="font-weight:600;color:var(--green-dark);">Phone</div><div style="color:var(--text-muted);font-size:14px;">+91 98765 43210</div></div></div>
-        <div style="display:flex;gap:14px;align-items:center;"><div style="width:44px;height:44px;background:#dcfce7;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">💬</div><div><div style="font-weight:600;color:var(--green-dark);">WhatsApp</div><div style="color:var(--text-muted);font-size:14px;">Mon–Sat, 9 AM – 7 PM</div></div></div>
-      </div>
-      <h4 style="color:var(--green-dark);margin-bottom:16px;">Send a Message</h4>
-      <div class="form-group"><label>Name</label><input type="text" placeholder="Your name"></div>
-      <div class="form-group"><label>Email</label><input type="email" placeholder="your@email.com"></div>
-      <div class="form-group"><label>Message</label><textarea rows="4" placeholder="How can we help?" style="resize:none;width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;"></textarea></div>
-      <button class="btn-primary" style="width:100%;" onclick="showToast('✅ Message sent! We'll reply within 24 hours.')">Send Message →</button>
-    </div>
-    <div style="margin-top:24px;"><button class="btn-primary" onclick="showHome()">← Back</button></div>
-  </div>
-</div>
-
-<div class="page-content" id="page-privacy">
-  <div style="max-width:700px;margin:0 auto;">
-    <div class="page-hero"><h1>🔒 Privacy Policy</h1><p>Your privacy matters. Here's how we handle your data.</p></div>
-    <div style="background:white;border-radius:16px;padding:32px;box-shadow:var(--shadow);">
-      <h3 style="color:var(--green-dark);margin-bottom:12px;">Data We Collect</h3>
-      <p style="color:var(--text-muted);line-height:1.8;margin-bottom:20px;">We collect your name, email, mobile number, and delivery address solely to process your orders. We never sell your data to third parties.</p>
-      <h3 style="color:var(--green-dark);margin-bottom:12px;">How We Use It</h3>
-      <p style="color:var(--text-muted);line-height:1.8;margin-bottom:20px;">Your data is used to deliver orders, send order confirmations (SMS, email, WhatsApp), and provide customer support. OTPs are used only for account verification.</p>
-      <h3 style="color:var(--green-dark);margin-bottom:12px;">Your Rights</h3>
-      <p style="color:var(--text-muted);line-height:1.8;">You may request data deletion at any time by contacting hello@organicroot.in</p>
-    </div>
-    <div style="margin-top:24px;"><button class="btn-primary" onclick="showHome()">← Back</button></div>
-  </div>
-</div>
-
-
-<div class="page-content" id="page-account">
-  <div style="max-width:900px;margin:0 auto;">
-    <div class="page-hero"><h1>👤 My Account</h1><p id="accountWelcome">Manage your profile, orders and wishlist</p></div>
-    <!-- Account Nav Tabs -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;">
-      <button onclick="showAccountTab('profile')" id="tab-profile" class="btn-primary" style="font-size:13px;padding:10px 20px;">👤 Profile</button>
-      <button onclick="showAccountTab('orders')" id="tab-orders" style="font-size:13px;padding:10px 20px;background:#f0fdf4;border:2px solid var(--green-pale);border-radius:10px;color:var(--green);font-weight:600;cursor:pointer;">📦 Orders</button>
-      <button onclick="showAccountTab('address')" id="tab-address" style="font-size:13px;padding:10px 20px;background:#f0fdf4;border:2px solid var(--green-pale);border-radius:10px;color:var(--green);font-weight:600;cursor:pointer;">📍 Address</button>
-      <button onclick="showAccountTab('wishlist')" id="tab-wishlist" style="font-size:13px;padding:10px 20px;background:#f0fdf4;border:2px solid var(--green-pale);border-radius:10px;color:var(--green);font-weight:600;cursor:pointer;">❤️ Wishlist</button>
-      <button onclick="handleSignOut()" style="font-size:13px;padding:10px 20px;background:#fee2e2;border:2px solid #fecaca;border-radius:10px;color:#dc2626;font-weight:600;cursor:pointer;margin-left:auto;">🚪 Sign Out</button>
-    </div>
-
-    <!-- Profile Tab -->
-    <div id="accountTab-profile">
-      <div style="background:white;border-radius:16px;padding:32px;box-shadow:var(--shadow);">
-        <h3 style="color:var(--green-dark);margin-bottom:24px;">Profile Information</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <div class="form-group"><label>First Name</label><input type="text" id="profileFirst" placeholder="First name"></div>
-          <div class="form-group"><label>Last Name</label><input type="text" id="profileLast" placeholder="Last name"></div>
-        </div>
-        <div class="form-group"><label>Email</label><input type="email" id="profileEmail" placeholder="Email" readonly style="background:#f8f8f8;"></div>
-        <div class="form-group"><label>Phone</label><input type="tel" id="profilePhone" placeholder="Phone number"></div>
-        <button class="btn-primary" onclick="saveProfile()" style="margin-top:8px;">Save Changes</button>
-      </div>
-    </div>
-
-    <!-- Orders Tab -->
-    <div id="accountTab-orders" style="display:none;">
-      <div style="background:white;border-radius:16px;padding:32px;box-shadow:var(--shadow);">
-        <h3 style="color:var(--green-dark);margin-bottom:24px;">My Orders</h3>
-        <div id="ordersList"><p style="color:var(--text-muted);">Loading orders...</p></div>
-      </div>
-    </div>
-
-    <!-- Address Tab -->
-    <div id="accountTab-address" style="display:none;">
-      <div style="background:white;border-radius:16px;padding:32px;box-shadow:var(--shadow);">
-        <h3 style="color:var(--green-dark);margin-bottom:24px;">Saved Addresses</h3>
-        <div id="addressList"><p style="color:var(--text-muted);">No saved addresses yet.</p></div>
-        <hr style="margin:24px 0;border-color:var(--green-pale);">
-        <h4 style="color:var(--green-dark);margin-bottom:16px;">Add New Address</h4>
-        <div class="form-group"><label>Full Address</label><input type="text" id="addrStreet" placeholder="House/flat, street, area"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="form-group"><label>City</label><input type="text" id="addrCity" placeholder="City"></div>
-          <div class="form-group"><label>Pincode</label><input type="text" id="addrPin" placeholder="Pincode"></div>
-        </div>
-        <button class="btn-primary" onclick="saveAddress()">Save Address</button>
-      </div>
-    </div>
-
-    <!-- Wishlist Tab -->
-    <div id="accountTab-wishlist" style="display:none;">
-      <div style="background:white;border-radius:16px;padding:32px;box-shadow:var(--shadow);">
-        <h3 style="color:var(--green-dark);margin-bottom:24px;">My Wishlist</h3>
-        <div id="wishlistItems"><p style="color:var(--text-muted);">Your wishlist is empty.</p></div>
-      </div>
-    </div>
-
-    <div style="margin-top:24px;"><button class="btn-primary" onclick="showHome()">← Back to Shop</button></div>
-  </div>
-</div>
-
-
-<div class="page-content" id="page-product">
-  <div style="max-width:900px;margin:0 auto;">
-    <div style="margin-bottom:20px;"><button class="btn-primary" onclick="history.back();showHome();" id="productBackBtn">← Back</button></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;background:white;border-radius:20px;padding:40px;box-shadow:var(--shadow);" id="productDetailContent">
-    </div>
-    <div style="margin-top:32px;">
-      <h3 style="color:var(--green-dark);margin-bottom:20px;">You might also like</h3>
-      <div class="products-grid" id="relatedProducts"></div>
-    </div>
-  </div>
-</div>
-
-<!-- FOOTER (always shown with main site) -->
-<footer id="mainFooter">
-  <div class="footer-grid">
-    <div>
-      <div class="footer-brand" id="footerBrand">Organic<span>Root</span></div>
-      <p class="footer-desc">Pure, certified organic produce delivered from farm to your doorstep. No chemicals. No compromise.</p>
-      <div class="footer-social">
-        <button class="social-btn" onclick="waChat('Hello!')">💬</button>
-        <button class="social-btn">📘</button>
-        <button class="social-btn">📸</button>
-        <button class="social-btn">🐦</button>
-      </div>
-    </div>
-    <div>
-      <h4>Company</h4>
-      <button class="footer-link" onclick="showPageSection('about','page-about')">Our Story</button>
-      <button class="footer-link" onclick="showPageSection('about','section-farmpartners')">Farm Partners</button>
-      <button class="footer-link" onclick="showPageSection('about','section-certifications')">Certifications</button>
-      <button class="footer-link" onclick="showPageSection('about','section-sustainability')">Sustainability</button>
-      <button class="footer-link" onclick="showPage('blog')">Blog</button>
-      <button class="footer-link" onclick="showPageSection('about','section-careers')">Careers</button>
-    </div>
-    <div>
-      <h4>Support</h4>
-      <button class="footer-link" onclick="showPage('track')">Track Order</button>
-      <button class="footer-link" onclick="showPage('returns')">Returns Policy</button>
-      <button class="footer-link" onclick="showPage('faq')">FAQ</button>
-      <button class="footer-link" onclick="showPage('contact')">Contact Us</button>
-      <button class="footer-link" onclick="showPage('contact')">Wholesale</button>
-      <button class="footer-link" onclick="showPage('privacy')">Privacy Policy</button>
-    </div>
-    <div>
-      <h4>Newsletter</h4>
-      <p style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:16px;line-height:1.6;">Get seasonal recipes, farm stories and exclusive offers.</p>
-      <div class="newsletter-form">
-        <input type="email" placeholder="your@email.com" id="newsletterEmail">
-        <button class="newsletter-btn" onclick="subscribeNewsletter()">Subscribe 🌿</button>
-      </div>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span id="footerCopyright">© 2025 OrganicRoot. All rights reserved.</span>
-    <span>🌿 Made with love for organic living</span>
-    <span>Secure Payments 🔒</span>
-  </div>
-</footer>
-
-<!-- CART SIDEBAR -->
-<div class="cart-sidebar" id="cartSidebar">
-  <div class="cart-header">
-    <h3>🛒 Your Cart</h3>
-    <button class="close-btn" onclick="toggleCart()">✕</button>
-  </div>
-  <div class="cart-body" id="cartBody"></div>
-  <div class="cart-footer" id="cartFooter" style="display:none;">
-    <div class="cart-total"><span>Total</span><span id="cartTotalAmt">₹0</span></div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;" id="deliveryNote"></div>
-    <button class="btn-primary" style="width:100%;" onclick="openCheckout()">Checkout →</button>
-  </div>
-</div>
-<div class="overlay" id="cartOverlay" onclick="toggleCart()"></div>
-
-<!-- CHECKOUT OVERLAY -->
-<div class="page-overlay" id="checkoutOverlay">
-  <div class="checkout-modal">
-    <div class="checkout-header">
-      <h3 id="checkoutTitle">Checkout</h3>
-      <div class="step-bar">
-        <div><div class="step-dot" id="step1">1</div><div class="step-label">Delivery</div></div>
-        <div><div class="step-dot" id="step2">2</div><div class="step-label">OTP</div></div>
-        <div><div class="step-dot" id="step3">3</div><div class="step-label">Payment</div></div>
-        <div><div class="step-dot" id="step4">4</div><div class="step-label">Confirm</div></div>
-      </div>
-    </div>
-    <div class="checkout-body" id="checkoutContent"></div>
-    <button class="modal-close" onclick="closeModal('checkoutOverlay')" style="position:absolute;top:16px;right:20px;background:rgba(255,255,255,0.2);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:white;font-size:18px;border:none;">✕</button>
-  </div>
-</div>
-
-<!-- OTP OVERLAY -->
-<div class="page-overlay" id="otpOverlay">
-  <div class="modal" style="max-width:400px;text-align:center;">
-    <button class="modal-close" onclick="closeModal('otpOverlay')">✕</button>
-    <div style="font-size:56px;margin-bottom:16px;" id="otpIcon">📱</div>
-    <h2 id="otpTitle">Verify Mobile Number</h2>
-    <p id="otpSubtitle" style="margin-bottom:8px;">Enter the 6-digit OTP sent via SMS</p>
-    <p id="otpSentTo" style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:20px;"></p>
-    <div class="otp-boxes">
-      <input class="otp-box" maxlength="1" oninput="otpMove(this,0)" onkeydown="otpBack(event,this,0)" type="tel">
-      <input class="otp-box" maxlength="1" oninput="otpMove(this,1)" onkeydown="otpBack(event,this,1)" type="tel">
-      <input class="otp-box" maxlength="1" oninput="otpMove(this,2)" onkeydown="otpBack(event,this,2)" type="tel">
-      <input class="otp-box" maxlength="1" oninput="otpMove(this,3)" onkeydown="otpBack(event,this,3)" type="tel">
-      <input class="otp-box" maxlength="1" oninput="otpMove(this,4)" onkeydown="otpBack(event,this,4)" type="tel">
-      <input class="otp-box" maxlength="1" oninput="otpMove(this,5)" onkeydown="otpBack(event,this,5)" type="tel">
-    </div>
-    <div class="otp-error" id="otpError">❌ Incorrect OTP. Please try again.</div>
-    <button class="btn-primary" style="width:100%;margin-bottom:16px;" onclick="verifyOtp()">Verify OTP ✓</button>
-    <div class="otp-timer">
-      Resend in <strong id="otpTimer">30s</strong>
-      <button class="otp-resend" onclick="resendOtp()">Resend OTP</button>
-    </div>
-    <div id="otpDemoHint" style="margin-top:16px;background:#fef9c3;border-radius:10px;padding:10px;font-size:12px;color:#854d0e;">
-    <div id="otpDemoHint" style="display:none;"></div>
-    </div>
-  </div>
-</div>
-
-<!-- SIGN IN / SIGN UP -->
-<div class="overlay" id="signInOverlay">
-  <div class="modal" style="max-height:90vh;overflow-y:auto;">
-    <button class="modal-close" onclick="closeModal('signInOverlay')">✕</button>
-    <div style="font-size:40px;margin-bottom:12px;">🌿</div>
-    <h2>Welcome Back</h2>
-    <p>Please enter your credentials to login</p>
-    <div id="signInEmailMode">
-      <div class="form-group"><label>Email or Phone</label><input type="text" placeholder="Email or phone number" id="signInEmail"></div>
-      <div class="form-group"><label>Password</label>
-        <div style="position:relative;">
-          <input type="password" placeholder="Your password" id="signInPassword" style="width:100%;padding-right:48px;">
-          <button onclick="togglePassword('signInPassword')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;" id="signInEyeBtn">👁</button>
-        </div>
-      </div>
-      <div style="text-align:right;margin-bottom:16px;"><button onclick="handleForgotPassword()" style="color:var(--green);font-size:13px;background:none;border:none;cursor:pointer;">Forgot Password?</button></div>
-      <button class="btn-primary" style="width:100%;margin-bottom:12px;" onclick="handleSignIn()">Sign In</button>
-      <div style="text-align:center;margin-bottom:12px;color:var(--text-muted);font-size:13px;">Or</div>
-      <button onclick="switchSignInMode()" style="width:100%;padding:12px;border:2px solid var(--green);border-radius:12px;background:none;color:var(--green);font-weight:600;cursor:pointer;margin-bottom:14px;">Login with OTP</button>
-    </div>
-    <div id="signInOtpMode" style="display:none;">
-      <div class="form-group"><label>Mobile Number</label><input type="tel" placeholder="+91 XXXXX XXXXX" id="signInPhone" maxlength="15"></div>
-      <button class="btn-primary" style="width:100%;margin-bottom:12px;" onclick="handleSignInOtp()">Send OTP →</button>
-      <div style="text-align:center;margin-bottom:12px;color:var(--text-muted);font-size:13px;">Or</div>
-      <button onclick="switchSignInMode()" style="width:100%;padding:12px;border:2px solid var(--green);border-radius:12px;background:none;color:var(--green);font-weight:600;cursor:pointer;margin-bottom:14px;">Login with Password</button>
-    </div>
-    <div style="text-align:center;font-size:14px;color:var(--text-muted);">Don't have an account? <button onclick="switchToSignUp()" style="color:var(--green);font-weight:600;background:none;border:none;cursor:pointer;">Create Account</button></div>
-  </div>
-</div>
-
-<div class="overlay" id="signUpOverlay">
-  <div class="modal" style="max-height:90vh;overflow-y:auto;">
-    <button class="modal-close" onclick="closeModal('signUpOverlay')">✕</button>
-    <div style="font-size:40px;margin-bottom:12px;">🌱</div>
-    <h2>Create Account</h2>
-    <p>Please fill in the details to create your account</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="form-group"><label>First Name</label><input type="text" placeholder="First name" id="signUpFirst"></div>
-      <div class="form-group"><label>Last Name</label><input type="text" placeholder="Last name" id="signUpLast"></div>
-    </div>
-    <div class="form-group"><label>Email</label><input type="email" placeholder="you@email.com" id="signUpEmail"></div>
-    <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="+91 XXXXX XXXXX" id="signUpPhone" maxlength="15"></div>
-    <div class="form-group"><label>Password</label>
-      <div style="position:relative;">
-        <input type="password" placeholder="Create a password" id="signUpPassword" style="width:100%;padding-right:48px;">
-        <button onclick="togglePassword('signUpPassword')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;">👁</button>
-      </div>
-    </div>
-    <div class="form-group"><label>Confirm Password</label>
-      <div style="position:relative;">
-        <input type="password" placeholder="Confirm your password" id="signUpConfirm" style="width:100%;padding-right:48px;">
-        <button onclick="togglePassword('signUpConfirm')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;">👁</button>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-      <input type="checkbox" id="signUpNewsletter" style="width:18px;height:18px;accent-color:var(--green);">
-      <label for="signUpNewsletter" style="font-size:14px;color:var(--text-muted);cursor:pointer;">Subscribe to newsletter</label>
-    </div>
-    <button class="btn-primary" style="width:100%;margin-bottom:14px;" onclick="handleSignUp()">Register</button>
-    <div style="text-align:center;font-size:14px;color:var(--text-muted);">Already have an account? <button onclick="switchToSignIn()" style="color:var(--green);font-weight:600;background:none;border:none;cursor:pointer;">Login</button></div>
-  </div>
-</div>
-
-<!-- WHATSAPP -->
-<div class="wa-float" id="waFloat">
-  <div class="wa-popup" id="waPopup">
-    <div class="wa-popup-header">
-      <h4>💬 Chat with OrganicRoot</h4>
-      <p>Typically replies in minutes</p>
-    </div>
-    <div class="wa-options">
-      <div class="wa-option" onclick="waChat('I need help with my order.')"><div class="wa-option-icon">📦</div><div><strong>Order Help</strong><br><small style="color:var(--text-muted);">Track, modify or cancel</small></div></div>
-      <div class="wa-option" onclick="waChat('I have a question about a product.')"><div class="wa-option-icon">🌿</div><div><strong>Product Query</strong><br><small style="color:var(--text-muted);">Ingredients, origin, etc.</small></div></div>
-      <div class="wa-option" onclick="waChat('I am interested in wholesale/bulk ordering.')"><div class="wa-option-icon">🏪</div><div><strong>Wholesale Inquiry</strong><br><small style="color:var(--text-muted);">Bulk & B2B orders</small></div></div>
-      <div class="wa-option" onclick="waChat('Hello, I need some help.')"><div class="wa-option-icon">🙋</div><div><strong>General Support</strong><br><small style="color:var(--text-muted);">Any other questions</small></div></div>
-    </div>
-  </div>
-  <button class="wa-btn" onclick="toggleWaPopup()" title="Chat on WhatsApp">💬</button>
-</div>
-
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
-
-<!-- NOTIFICATION BANNER -->
-<div class="notif-banner" id="notifBanner">
-  📱 Order confirmed! SMS sent to <span id="notifSmsTo"></span> · 📧 Email sent to <span id="notifEmailTo"></span>
-  <button onclick="hideNotif()" style="background:none;border:none;color:white;margin-left:12px;cursor:pointer;font-size:16px;">✕</button>
-</div>
-
-<!-- ADMIN LOGIN -->
-<div class="page-overlay" id="adminLoginOverlay">
-  <div class="modal" style="max-width:400px;">
-    <button class="modal-close" onclick="closeModal('adminLoginOverlay')">✕</button>
-    <div style="font-size:40px;margin-bottom:12px;">⚙️</div>
-    <h2>Admin Login</h2>
-    <p>Access the OrganicRoot admin panel</p>
-    <div class="form-group"><label>Password</label><input type="password" placeholder="Enter admin password" id="adminPassInput" onkeydown="if(event.key==='Enter')doAdminLogin()"></div>
-    <button class="btn-primary" style="width:100%;" onclick="doAdminLogin()">Login →</button>
-    <div style="margin-top:12px;background:#fef9c3;border-radius:10px;padding:10px;font-size:12px;color:#854d0e;text-align:center;">🔑 Default password: <strong>admin123</strong></div>
-  </div>
-</div>
-
-<!-- ADMIN PANEL -->
-<div id="adminPanel" style="display:none;">
-  <div class="admin-nav">
-    <div class="brand">⚙️ OrganicRoot Admin</div>
-    <button class="admin-tab-btn active" onclick="adminTab('dashboard',this)">📊 Dashboard</button>
-    <button class="admin-tab-btn" onclick="adminTab('products',this)">🌿 Products</button>
-    <button class="admin-tab-btn" onclick="adminTab('orders',this)">📦 Orders</button>
-    <button class="admin-tab-btn" onclick="adminTab('customers',this)">👥 Customers</button>
-    <button class="admin-tab-btn" onclick="adminTab('settings',this)">⚙️ Settings</button>
-    <button class="admin-logout" onclick="adminLogout()">Logout →</button>
-  </div>
-
-  <div class="admin-content">
-    <!-- DASHBOARD -->
-    <div class="admin-section active" id="admin-dashboard">
-      <div class="admin-section-title">Dashboard Overview</div>
-      <div id="adminLowStockAlert" style="display:none;"></div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-card-icon">💰</div><div class="stat-card-num" id="adminRevenue">Loading…</div><div class="stat-card-label">Total Revenue</div></div>
-        <div class="stat-card"><div class="stat-card-icon">📦</div><div class="stat-card-num" id="adminOrderCount">—</div><div class="stat-card-label">Total Orders</div></div>
-        <div class="stat-card"><div class="stat-card-icon">👥</div><div class="stat-card-num" id="adminCustomerCount">—</div><div class="stat-card-label">Customers</div></div>
-        <div class="stat-card"><div class="stat-card-icon">🌿</div><div class="stat-card-num" id="adminProductCount">—</div><div class="stat-card-label">Products</div></div>
-      </div>
-      <div class="admin-table">
-        <table>
-          <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-          <tbody id="adminDashboardOrders"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">Loading orders…</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- PRODUCTS -->
-    <div class="admin-section" id="admin-products">
-      <div class="admin-section-title">
-        Products
-        <button class="btn-primary" onclick="showAddProduct()" style="font-size:14px;padding:10px 20px;">+ Add Product</button>
-      </div>
-      <div class="admin-table">
-        <table>
-          <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Origin</th><th>Actions</th></tr></thead>
-          <tbody id="adminProductsTable"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ORDERS -->
-    <div class="admin-section" id="admin-orders">
-      <div class="admin-section-title">All Orders</div>
-      <div class="admin-table">
-        <table>
-          <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th><th>Update Status</th></tr></thead>
-          <tbody id="adminOrdersTable"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">Loading orders…</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- CUSTOMERS -->
-    <div class="admin-section" id="admin-customers">
-      <div class="admin-section-title">
-        Customers
-        <button class="btn-primary" onclick="showAddCustomer()" style="font-size:14px;padding:10px 20px;">+ Add Customer</button>
-      </div>
-      <div class="admin-table">
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Mobile</th><th>Orders</th><th>Access Type</th><th>Actions</th></tr></thead>
-          <tbody id="adminCustomersTable"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- SETTINGS -->
-    <div class="admin-section" id="admin-settings">
-      <div class="admin-section-title">Settings</div>
-      <div style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:24px;">
-        <div>
-          <h3 style="color:var(--green-dark);margin-bottom:6px;">🗄️ Migrate Products to Firestore</h3>
-          <p style="color:var(--text-muted);font-size:14px;margin:0;">Push all local products into Firestore so they persist in the database. Run this once. Safe to run again — it won't create duplicates.</p>
-        </div>
-        <button class="btn-primary" style="white-space:nowrap;min-width:160px;" onclick="migrateProductsToFirestore()" id="migrateBtn">Run Migration →</button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
-        <div style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-          <h3 style="color:var(--green-dark);margin-bottom:20px;">🏢 Company Info</h3>
-          <div class="form-group"><label>Company Name</label><input type="text" id="settingCompanyName" value="OrganicRoot"></div>
-          <div class="form-group"><label>Tagline</label><input type="text" id="settingTagline" value="Pure. Natural. Delivered."></div>
-          <div class="form-group"><label>Contact Email</label><input type="email" id="settingEmail" value="hello@organicroot.in"></div>
-          <div class="form-group"><label>WhatsApp Number</label><input type="text" id="settingWA" value="+91 98765 43210"></div>
-          <button class="btn-primary" onclick="saveCompanySettings()">Save Changes ✓</button>
-        </div>
-        <div style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-          <h3 style="color:var(--green-dark);margin-bottom:20px;">🚚 Delivery Settings</h3>
-          <div class="form-group"><label>Free Delivery Threshold (₹)</label><input type="number" id="settingFreeDelivery" value="499"></div>
-          <div class="form-group"><label>Delivery Fee (₹)</label><input type="number" id="settingDeliveryFee" value="49"></div>
-          <div class="form-group"><label>Estimated Delivery Days</label><input type="text" id="settingDeliveryDays" value="2–3 business days"></div>
-          <button class="btn-primary" onclick="showToast('✅ Delivery settings saved!')">Save Changes ✓</button>
-        </div>
-        <div style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-          <h3 style="color:var(--green-dark);margin-bottom:20px;">🔐 Security</h3>
-          <div class="form-group"><label>Current Password</label><input type="password" id="settingCurrentPass" placeholder="Current password"></div>
-          <div class="form-group"><label>New Password</label><input type="password" id="settingNewPass" placeholder="New password"></div>
-          <div class="form-group"><label>Confirm Password</label><input type="password" id="settingConfirmPass" placeholder="Confirm new password"></div>
-          <button class="btn-primary" onclick="changeAdminPassword()">Update Password ✓</button>
-        </div>
-        <div style="background:white;border-radius:16px;padding:28px;box-shadow:var(--shadow);">
-          <h3 style="color:var(--green-dark);margin-bottom:20px;">📣 Notifications</h3>
-          <div style="display:flex;flex-direction:column;gap:16px;">
-            <label style="display:flex;align-items:center;gap:12px;cursor:pointer;"><input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--green);"> <span style="font-size:14px;font-weight:500;">SMS order confirmations</span></label>
-            <label style="display:flex;align-items:center;gap:12px;cursor:pointer;"><input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--green);"> <span style="font-size:14px;font-weight:500;">Email order confirmations</span></label>
-            <label style="display:flex;align-items:center;gap:12px;cursor:pointer;"><input type="checkbox" checked style="width:18px;height:18px;accent-color:var(--green);"> <span style="font-size:14px;font-weight:500;">WhatsApp delivery updates</span></label>
-            <label style="display:flex;align-items:center;gap:12px;cursor:pointer;"><input type="checkbox" style="width:18px;height:18px;accent-color:var(--green);"> <span style="font-size:14px;font-weight:500;">Marketing emails</span></label>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"The tomatoes genuinely taste like tomatoes should. I'd forgotten what that was like. My family noticed the difference in the first week."</p>
+        <div class="review-author">
+          <div class="review-avatar">🧑</div>
+          <div>
+            <div class="review-name">Arjun Mehta</div>
+            <div class="review-loc">Chennai, Tamil Nadu</div>
           </div>
-          <button class="btn-primary" style="margin-top:20px;" onclick="showToast('✅ Notification settings saved!')">Save ✓</button>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"The A2 milk made a real difference for my son who was sensitive to regular dairy. Two months in and we're not going back."</p>
+        <div class="review-author">
+          <div class="review-avatar">👩</div>
+          <div>
+            <div class="review-name">Priya Krishnan</div>
+            <div class="review-loc">Bengaluru, Karnataka</div>
+          </div>
+        </div>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★☆</div>
+        <p class="review-text">"Delivery is consistently on time and the produce is always fresh. The Alphonso mangoes in season were exceptional — worth every rupee."</p>
+        <div class="review-author">
+          <div class="review-avatar">🧓</div>
+          <div>
+            <div class="review-name">Suresh Nair</div>
+            <div class="review-loc">Coimbatore, Tamil Nadu</div>
+          </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- ADD PRODUCT MODAL -->
-    <div class="page-overlay" id="addProductOverlay">
-      <div class="modal" style="max-width:540px;max-height:90vh;overflow-y:auto;">
-        <button class="modal-close" onclick="closeModal('addProductOverlay')">✕</button>
-        <h2 id="addProductTitle">Add New Product</h2>
-        <div style="margin-top:20px;">
-          <div class="form-group"><label>Product Name</label><input type="text" id="newProdName" placeholder="Organic Turmeric Powder"></div>
-          <div class="form-group"><label>Short Description</label><input type="text" id="newProdDesc" placeholder="100% natural, no additives"></div>
-          <div class="form-group"><label>Full Description</label><textarea id="newProdFullDesc" rows="3" placeholder="Detailed product description, health benefits, usage tips..." style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;"></textarea></div>
-          <div class="form-group"><label>Image URL (Unsplash or direct link)</label><input type="url" id="newProdImg" placeholder="https://images.unsplash.com/photo-..."></div>
-          <div class="form-row">
-            <div class="form-group"><label>Price (₹)</label><input type="number" id="newProdPrice" placeholder="299"></div>
-            <div class="form-group"><label>Original Price (₹)</label><input type="number" id="newProdOrigPrice" placeholder="399"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>Weight / Size</label><input type="text" id="newProdWeight" placeholder="500g | 1kg | 250ml"></div>
-            <div class="form-group"><label>Stock</label><input type="number" id="newProdStock" placeholder="50"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label>Category</label>
-              <select id="newProdCat" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">
-                <option value="vegetables">Vegetables</option>
-                <option value="fruits">Fruits</option>
-                <option value="dairy">Dairy</option>
-                <option value="grains">Grains</option>
-                <option value="oils">Oils &amp; Ghee</option>
-                <option value="spices">Spices</option>
-                <option value="honey">Honey</option>
-              </select>
+  <!-- Footer -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3>Organic<em style="font-style:italic;color:#d4a96a">Root</em></h3>
+        <p>Sourcing organic goodness directly from verified farms across India, delivered fresh to your home.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a class="footer-link" onclick="showPage('shop')">All Products</a>
+        <a class="footer-link" onclick="showPage('shop')">Vegetables</a>
+        <a class="footer-link" onclick="showPage('shop')">Fruits</a>
+        <a class="footer-link" onclick="showPage('shop')">Dairy</a>
+        <a class="footer-link" onclick="showPage('shop')">Grains</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a class="footer-link" onclick="showPage('blog')">Our Story</a>
+        <a class="footer-link" onclick="showPage('blog')">Journal</a>
+        <a class="footer-link" onclick="showPage('contact')">Contact</a>
+        <a class="footer-link" onclick="showPage('track')">Track Order</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <span class="footer-link">hello@organicroot.in</span>
+        <span class="footer-link">+91 80000 12345</span>
+        <span class="footer-link">Mon–Sat, 7am – 8pm</span>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 OrganicRoot. All rights reserved.</p>
+      <p>Made with 🌿 for healthier families</p>
+    </div>
+  </footer>
+
+</div><!-- /page-home -->
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: SHOP
+══════════════════════════════════════════════════════ -->
+<div id="page-shop" class="page">
+  <div class="page-header">
+    <h1>Our Organic Store</h1>
+    <p>Fresh harvests, delivered daily. All products certified organic.</p>
+  </div>
+  <div class="page-content">
+    <div class="search-row">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="shop-search" type="text" placeholder="Search products, categories…">
+      </div>
+    </div>
+    <div class="categories-row">
+      <div class="cat-pill active" data-cat="all">🌿 All</div>
+      <div class="cat-pill" data-cat="vegetables">🥦 Vegetables</div>
+      <div class="cat-pill" data-cat="fruits">🍎 Fruits</div>
+      <div class="cat-pill" data-cat="dairy">🥛 Dairy</div>
+      <div class="cat-pill" data-cat="grains">🌾 Grains</div>
+      <div class="cat-pill" data-cat="oils">🫒 Oils & More</div>
+    </div>
+    <div id="shop-products" class="products-grid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+  <footer style="background:var(--clay);padding:24px 60px;text-align:center;color:rgba(249,244,236,0.5);font-size:13px">
+    © 2026 OrganicRoot · <button class="footer-link" onclick="showPage('contact')" style="display:inline;background:none;border:none;cursor:pointer;font-size:13px;color:rgba(249,244,236,0.5)">Contact Us</button>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: ACCOUNT
+══════════════════════════════════════════════════════ -->
+<div id="page-account" class="page">
+  <div class="page-header">
+    <h1>My Account</h1>
+    <p>Manage your orders, profile, and preferences.</p>
+  </div>
+  <div class="page-content">
+
+    <!-- Logged out state -->
+    <div id="acc-logged-out" style="text-align:center;padding:80px 20px">
+      <div style="font-size:64px;margin-bottom:20px">🌿</div>
+      <h2 style="font-size:26px;color:var(--clay);margin-bottom:10px">Welcome to OrganicRoot</h2>
+      <p style="font-size:15px;color:var(--text-muted);margin-bottom:28px">Sign in to view your orders, manage your address, and more.</p>
+      <button class="btn-primary" onclick="openSignIn()">Sign In / Create Account</button>
+    </div>
+
+    <!-- Logged in state -->
+    <div id="acc-logged-in" class="account-grid" style="display:none">
+      <div class="account-sidebar">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;text-align:center">
+          <div style="font-size:48px;margin-bottom:10px">👤</div>
+          <h3 style="font-size:18px;color:var(--clay)" id="acc-display-name">—</h3>
+          <p style="font-size:13px;color:var(--text-muted);margin-top:4px" id="acc-display-email">—</p>
+        </div>
+        <div class="account-nav">
+          <button class="acc-nav-item active" data-panel="orders">📦 My Orders</button>
+          <button class="acc-nav-item" data-panel="profile">👤 Profile</button>
+          <button class="acc-nav-item" data-panel="addresses">📍 Addresses</button>
+          <button class="acc-nav-item" id="btn-signout">🚪 Sign Out</button>
+        </div>
+      </div>
+      <div class="account-main">
+        <div class="acc-panel active" id="panel-orders">
+          <div class="card-block">
+            <h3>My Orders</h3>
+            <p class="sub">Your complete order history.</p>
+            <div id="orders-list">
+              <div style="text-align:center;padding:40px;color:var(--text-muted)">
+                <div style="font-size:40px;margin-bottom:12px">📦</div>
+                <p>Loading orders…</p>
+              </div>
             </div>
-            <div class="form-group"><label>Emoji Icon</label><input type="text" id="newProdIcon" placeholder="🌿"></div>
-          </div>
-          <div class="form-group"><label>Origin</label><input type="text" id="newProdOrigin" placeholder="Kerala, India | Himachal Pradesh"></div>
-          <div class="form-group"><label>Ingredients</label><input type="text" id="newProdIngredients" placeholder="100% Organic Turmeric (Curcuma longa)"></div>
-          <div class="form-group"><label>Certifications (comma separated)</label><input type="text" id="newProdCerts" placeholder="FSSAI Certified, India Organic, Non-GMO"></div>
-          <div class="form-group"><label>Badge (optional)</label><input type="text" id="newProdBadge" placeholder="New | Best Seller | Organic"></div>
-          <div style="display:flex;gap:12px;margin-top:8px;">
-            <button class="btn-outline" style="flex:1;" onclick="closeModal('addProductOverlay')">Cancel</button>
-            <button class="btn-primary" style="flex:1;" onclick="saveProduct()">Save Product ✓</button>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- ADD CUSTOMER MODAL -->
-    <div class="page-overlay" id="addCustomerOverlay">
-      <div class="modal" style="max-width:440px;">
-        <button class="modal-close" onclick="closeModal('addCustomerOverlay')">✕</button>
-        <h2>Add Customer</h2>
-        <div style="margin-top:20px;">
-          <div class="form-group"><label>Name</label><input type="text" id="newCustName" placeholder="Full name"></div>
-          <div class="form-group"><label>Email</label><input type="email" id="newCustEmail" placeholder="email@example.com"></div>
-          <div class="form-group"><label>Mobile</label><input type="tel" id="newCustMobile" placeholder="+91 XXXXX XXXXX"></div>
-          <div class="form-group"><label>Access Type</label>
-            <select id="newCustAccess" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">
-              <option value="Customer">Customer</option>
-              <option value="Viewer">Viewer</option>
-              <option value="Manager">Manager</option>
-              <option value="Admin">Admin</option>
-            </select>
+        <div class="acc-panel" id="panel-profile">
+          <div class="card-block">
+            <h3>Profile Details</h3>
+            <p class="sub">Update your personal information.</p>
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="profile-name" placeholder="Your name">
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="profile-email" placeholder="your@email.com" disabled style="opacity:0.6;cursor:not-allowed">
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="profile-phone" placeholder="+91 XXXXX XXXXX">
+            </div>
+            <button class="btn-primary" onclick="showToast('Profile updated!','success')">Save Changes</button>
           </div>
-          <div style="display:flex;gap:12px;">
-            <button class="btn-outline" style="flex:1;" onclick="closeModal('addCustomerOverlay')">Cancel</button>
-            <button class="btn-primary" style="flex:1;" onclick="saveCustomer()">Add Customer ✓</button>
+        </div>
+        <div class="acc-panel" id="panel-addresses">
+          <div class="card-block">
+            <h3>Saved Addresses</h3>
+            <p class="sub">Your delivery addresses.</p>
+            <div style="background:var(--cream);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">
+              <p style="font-size:13px;font-weight:700;color:var(--clay);margin-bottom:6px">🏠 Home</p>
+              <p style="font-size:13.5px;color:var(--text-muted);line-height:1.6">Add your home address to speed up checkout.</p>
+            </div>
+            <div class="form-group"><label>Street Address</label><input type="text" placeholder="Flat, building, street"></div>
+            <div class="form-group"><label>City & PIN</label><input type="text" placeholder="Chennai – 600001"></div>
+            <button class="btn-primary" onclick="showToast('Address saved!','success')">Save Address</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: TRACK ORDER
+══════════════════════════════════════════════════════ -->
+<div id="page-track" class="page">
+  <div class="page-header">
+    <h1>Track Your Order</h1>
+    <p>Enter your Order ID to see live status.</p>
+  </div>
+  <div class="page-content" style="max-width:600px">
+    <div class="card-block">
+      <h3>Order Lookup</h3>
+      <p class="sub">Your Order ID was emailed to you after purchase.</p>
+      <div class="form-group">
+        <label>Order ID</label>
+        <input type="text" id="track-input" placeholder="e.g. OR20260529" style="font-size:18px;text-align:center;letter-spacing:2px">
+      </div>
+      <button class="btn-primary" style="width:100%" onclick="trackOrder()">Track Order</button>
+    </div>
+    <div id="track-result" style="display:none">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: CONTACT
+══════════════════════════════════════════════════════ -->
+<div id="page-contact" class="page">
+  <div class="page-header">
+    <h1>Get in Touch</h1>
+    <p>Questions, feedback, or a bulk order inquiry — we read every message.</p>
+  </div>
+  <div class="page-content">
+    <div class="contact-grid">
+      <div class="contact-info">
+        <h3>We'd love to hear from you</h3>
+        <p>Our team responds within 24 hours on working days. For urgent delivery issues, call us directly.</p>
+        <div class="contact-detail">
+          <div class="contact-detail-icon">📧</div>
+          <div>hello@organicroot.in</div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-icon">📞</div>
+          <div>+91 80000 12345</div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-icon">🕐</div>
+          <div>Monday – Saturday, 7am to 8pm</div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-icon">📍</div>
+          <div>Ambattur, Chennai, Tamil Nadu 600053</div>
+        </div>
+      </div>
+      <div>
+        <div class="card-block">
+          <form id="contact-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Your Name *</label>
+                <input type="text" id="contact-name" placeholder="Full name" required>
+              </div>
+              <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="contact-email" placeholder="your@email.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Subject</label>
+              <input type="text" id="contact-subject" placeholder="What's this about?">
+            </div>
+            <div class="form-group">
+              <label>Message *</label>
+              <textarea id="contact-message" placeholder="Tell us what you need…" required></textarea>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: BLOG / JOURNAL
+══════════════════════════════════════════════════════ -->
+<div id="page-blog" class="page">
+  <div class="page-header">
+    <h1>The OrganicRoot Journal</h1>
+    <p>Nutrition science, farm stories, seasonal recipes, and honest food writing.</p>
+  </div>
+  <div class="page-content">
+    <div id="blog-grid" class="blog-grid">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     CART SIDEBAR
+══════════════════════════════════════════════════════ -->
+<div id="cart-sidebar" class="cart-sidebar">
+  <div class="cart-header">
+    <h3>🧺 Your Basket</h3>
+    <button class="btn-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cart-body">
+    <div class="cart-empty">
+      <div class="cart-empty-icon">🧺</div>
+      <h4>Your basket is empty</h4>
+      <p>Add some fresh, organic goodness to get started.</p>
+    </div>
+  </div>
+  <div class="cart-footer" id="cart-footer" style="display:none">
+    <div class="cart-total-row">
+      <span>Total</span>
+      <span id="cart-total">₹0</span>
+    </div>
+    <button class="btn-checkout" onclick="openCheckout()">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     OVERLAY
+══════════════════════════════════════════════════════ -->
+<div id="overlay" class="overlay"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     AUTH MODAL
+══════════════════════════════════════════════════════ -->
+<div id="modal-auth" class="modal-wrapper">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-auth')">✕</button>
+    <div class="modal-logo">🌿</div>
+
+    <!-- Sign In -->
+    <div id="auth-form-signin">
+      <h2>Welcome back</h2>
+      <p class="modal-sub">Sign in to your OrganicRoot account</p>
+      <form id="signin-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="si-email" placeholder="your@email.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="si-password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;margin-bottom:14px">Sign In</button>
+      </form>
+      <div style="text-align:center;font-size:13.5px;color:var(--text-muted)">
+        <button id="switch-to-forgot" class="link-btn" style="font-size:13px">Forgot password?</button>
+      </div>
+      <div class="divider">or</div>
+      <div style="text-align:center;font-size:14px;color:var(--text-muted)">
+        New here? <button id="switch-to-signup" class="link-btn">Create an account</button>
+      </div>
+    </div>
+
+    <!-- Sign Up -->
+    <div id="auth-form-signup" style="display:none">
+      <h2>Create account</h2>
+      <p class="modal-sub">Join OrganicRoot for fresher groceries</p>
+      <form id="signup-form">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="su-name" placeholder="Your name" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="su-email" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="su-password" placeholder="Min. 6 characters" required autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;margin-bottom:14px">Create Account</button>
+      </form>
+      <div class="divider">or</div>
+      <div style="text-align:center;font-size:14px;color:var(--text-muted)">
+        Already have an account? <button id="switch-to-signin" class="link-btn">Sign in</button>
+      </div>
+    </div>
+
+    <!-- Forgot Password -->
+    <div id="auth-form-forgot" style="display:none">
+      <h2>Reset Password</h2>
+      <p class="modal-sub">Enter your email and we'll send a reset link.</p>
+      <form id="forgot-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="fp-email" placeholder="your@email.com" required>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;margin-bottom:14px">Send Reset Link</button>
+      </form>
+      <div style="text-align:center;font-size:14px">
+        <button id="switch-to-signin" class="link-btn">Back to sign in</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     CHECKOUT MODAL
+══════════════════════════════════════════════════════ -->
+<div id="checkout-wrapper" class="checkout-wrapper">
+  <div class="checkout-modal">
+    <div class="checkout-head">
+      <h3>Checkout</h3>
+      <div class="step-track">
+        <div class="step-node active" data-step="1">1</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="2">2</div>
+        <div class="step-line"></div>
+        <div class="step-node" data-step="3">✓</div>
+      </div>
+      <div class="step-labels">
+        <span class="step-lbl">Delivery</span>
+        <span class="step-lbl" style="margin-right:0;margin-left:40px">Payment</span>
+        <span class="step-lbl" style="margin-right:0;margin-left:26px">Done</span>
+      </div>
+    </div>
+    <div class="checkout-body" id="checkout-body">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TOAST CONTAINER
+══════════════════════════════════════════════════════ -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════════ -->
+<script src="js/products.js"></script>
+<script src="js/app.js"></script>
+<script src="js/firebase-auth.js"></script>
 
 <script>
-// ============ DATA ============
-let companyName = 'OrganicRoot';
-let adminPassword = 'admin123';
-let freeDeliveryThreshold = 499;
-let deliveryFee = 49;
+// Order tracking (real Firebase lookup)
+async function trackOrder() {
+  const input = document.getElementById('track-input').value.trim();
+  const result = document.getElementById('track-result');
+  if (!input) { showToast('Please enter an Order ID', 'error'); return; }
 
-let products = [
-  { id:1, name:'Organic Spinach Bunch', desc:'Fresh, tender baby spinach leaves', fullDesc:'Hand-picked from our certified partner farms in Pune, this spinach is harvested at peak freshness and delivered within 24 hours. Rich in iron, calcium, and vitamins A, C, and K. No pesticides, no chemicals — just pure, vibrant greens.', ingredients:'100% Organic Spinach', certifications:'India Organic, FSSAI Certified', weight:'250g', origin:'Pune, Maharashtra', price:89, origPrice:110, cat:'vegetables', icon:'🥬', badge:'Fresh', stock:48, img:'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=300&fit=crop' },
-  { id:2, name:'Heirloom Tomatoes', desc:'Vine-ripened heritage varieties', fullDesc:'These rare heirloom tomatoes are grown from seeds passed down for generations. Vine-ripened for maximum sweetness and flavour — miles ahead of the pale, gassed tomatoes in supermarkets. Perfect for salads, curries, and chutneys.', ingredients:'100% Organic Heirloom Tomatoes', certifications:'USDA Organic, India Organic', weight:'500g', origin:'Nashik, Maharashtra', price:149, origPrice:180, cat:'vegetables', icon:'🍅', badge:'Best Seller', stock:35, img:'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=300&fit=crop' },
-  { id:3, name:'Raw Forest Honey', desc:'Single-origin, unprocessed wildflower honey', fullDesc:'Sourced from wild beehives in the forests of Uttarakhand, this honey is completely raw and unfiltered — enzymes, pollen, and antioxidants fully intact. Never heated above 40°C. Rich amber colour with complex floral notes.', ingredients:'100% Raw Forest Honey', certifications:'India Organic, FSSAI Certified', weight:'500g', origin:'Uttarakhand', price:499, origPrice:649, cat:'honey', icon:'🍯', badge:'Premium', stock:22, img:'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop' },
-  { id:4, name:'Amul A2 Desi Ghee', desc:'Bilona churned from free-grazing cows', fullDesc:'Made using the traditional bilona method — curd is hand-churned to extract butter, which is then slow-cooked into ghee. Only A2 milk from Gir cows grazing freely on natural pastures. No additives, no preservatives, no shortcuts.', ingredients:'A2 Cow Milk', certifications:'A2 Certified, FSSAI Approved', weight:'500ml', origin:'Gujarat', price:799, origPrice:999, cat:'oils', icon:'🫙', badge:'A2 Certified', stock:18, img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop' },
-  { id:5, name:'Organic Red Rice', desc:'High-fibre, mineral-rich heritage grain', fullDesc:'This ancient red rice variety from Kerala has been cultivated for over 2,000 years. Its deep red bran layer is packed with anthocyanins, fibre, and minerals. Lower glycaemic index than white rice — better for blood sugar and digestion.', ingredients:'100% Organic Red Rice', certifications:'India Organic, FSSAI Certified', weight:'1kg', origin:'Kerala', price:299, origPrice:350, cat:'grains', icon:'🌾', badge:'Organic', stock:40, img:'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=300&fit=crop' },
-  { id:6, name:'Farm Fresh Eggs (12)', desc:'Cage-free, free-range country eggs', fullDesc:'From hens that roam freely on open farms, fed a natural diet of grains and greens. These country eggs have deeper orange yolks, richer flavour, and significantly higher omega-3 and vitamin D content than caged eggs.', ingredients:'Free-Range Eggs', certifications:'FSSAI Certified, Cage-Free Verified', weight:'12 eggs', origin:'Tamil Nadu', price:180, origPrice:210, cat:'dairy', icon:'🥚', badge:'Free Range', stock:60, img:'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=400&h=300&fit=crop' },
-  { id:7, name:'Organic Banana (6 pcs)', desc:'Naturally ripened, no artificial gases', fullDesc:'Grown without synthetic fertilisers and ripened naturally on the tree — not in ethylene gas chambers like commercial bananas. Sweeter, more fragrant, and loaded with potassium, B6, and natural sugars for sustained energy.', ingredients:'100% Organic Bananas', certifications:'India Organic, FSSAI Certified', weight:'~600g', origin:'Andhra Pradesh', price:79, origPrice:95, cat:'fruits', icon:'🍌', badge:'Fresh', stock:30, img:'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=300&fit=crop' },
-  { id:8, name:'Alphonso Mango (6 pcs)', desc:'King of mangoes — pure Ratnagiri GI', fullDesc:'The Alphonso from Ratnagiri is the undisputed king of mangoes — GI tagged, meaning only mangoes from this specific coastal belt can carry this name. Intensely aromatic, fibre-free flesh, and a richness no other variety matches. Seasonal and limited.', ingredients:'100% Alphonso Mangoes', certifications:'GI Tag — Ratnagiri, FSSAI Certified', weight:'~1.2kg', origin:'Ratnagiri, Maharashtra', price:599, origPrice:750, cat:'fruits', icon:'🥭', badge:'GI Tag', stock:14, img:'https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=400&h=300&fit=crop' },
-  { id:9, name:'Cold-Pressed Coconut Oil', desc:'Wood-pressed, unrefined virgin oil', fullDesc:'Extracted using a traditional wooden cold-press (chekku), this oil retains its natural lauric acid, antioxidants, and aroma. No heat, no solvents, no refining. Perfect for cooking, skin, and hair. Solidifies in cool weather — a sign of purity.', ingredients:'100% Organic Coconut', certifications:'India Organic, FSSAI Certified', weight:'500ml', origin:'Kerala', price:399, origPrice:499, cat:'oils', icon:'🥥', badge:'Cold Pressed', stock:25, img:'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=300&fit=crop' },
-  { id:10, name:'Organic Turmeric Powder', desc:'Lakadong variety — 7% curcumin content', fullDesc:'Lakadong turmeric from Meghalaya contains up to 7-12% curcumin — compared to 2-3% in commercial turmeric. Stone-ground and sun-dried to preserve potency. Used in Ayurveda for centuries for its anti-inflammatory and immunity-boosting properties.', ingredients:'100% Lakadong Turmeric', certifications:'India Organic, FSSAI Certified', weight:'200g', origin:'Meghalaya', price:249, origPrice:320, cat:'spices', icon:'🟡', badge:'High Curcumin', stock:55, img:'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop' },
-  { id:11, name:'Full Cream Dahi (500g)', desc:'Set curd from A2 milk, no preservatives', fullDesc:'Made daily from A2 cow milk using live cultures — no stabilisers, no preservatives, no added flavours. Thick, creamy, and probiotic-rich. The culture is a live strain maintained for generations, giving it a distinctive tangy depth.', ingredients:'A2 Cow Milk, Live Cultures', certifications:'A2 Certified, FSSAI Approved', weight:'500g', origin:'Tamil Nadu', price:99, origPrice:120, cat:'dairy', icon:'🥛', badge:'A2 Milk', stock:42, img:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=300&fit=crop' },
-  { id:12, name:'Organic Black Pepper', desc:'Malabar whole peppercorns, hand-sorted', fullDesc:'Grown in the spice gardens of Wayanad, these Malabar peppercorns are hand-sorted to remove hollow and defective berries. Sun-dried to develop their essential oils. Bold, complex heat with earthy undertones — nothing like pre-ground pepper.', ingredients:'100% Organic Black Pepper', certifications:'India Organic, FSSAI Certified', weight:'100g', origin:'Wayanad, Kerala', price:199, origPrice:250, cat:'spices', icon:'⚫', badge:'Malabar', stock:38, img:'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop' },
-  { id:13, name:'Organic Ashwagandha Powder', desc:'Pure root powder, no fillers or additives', fullDesc:'Sourced from certified organic farms in Madhya Pradesh, this Ashwagandha is harvested at full root maturity for maximum withanolide content. Stone-ground and sieved to a fine powder. Used in Ayurveda for centuries to reduce stress, improve sleep quality, and boost immunity. Mix 1 tsp in warm milk or water daily.', ingredients:'100% Organic Ashwagandha Root (Withania somnifera)', certifications:'India Organic, FSSAI Certified, Non-GMO', weight:'200g', origin:'Madhya Pradesh', price:349, origPrice:450, cat:'spices', icon:'🌿', badge:'Ayurvedic', stock:40, img:'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=300&fit=crop' },
-  { id:14, name:'🧪 Test Product', desc:'For payment gateway testing only', fullDesc:'This is a test product used to verify Razorpay payment integration. Do not purchase.', ingredients:'N/A', certifications:'N/A', weight:'1g', origin:'Test', price:1, origPrice:2, cat:'spices', icon:'🧪', badge:'Test', stock:999, img:'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=400&h=300&fit=crop' },
-];
+  result.style.display = 'block';
+  result.innerHTML = `<div class="card-block" style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div><p style="margin-top:16px;color:var(--text-muted)">Looking up order…</p></div>`;
 
-let customers = [
-  { name:'Priya Sharma', email:'priya@example.com', mobile:'+91 98765 43210', orders:12, access:'Customer' },
-  { name:'Rahul Mehta', email:'rahul@example.com', mobile:'+91 87654 32109', orders:5, access:'Customer' },
-  { name:'Ananya K', email:'ananya@example.com', mobile:'+91 76543 21098', orders:24, access:'Manager' },
-  { name:'Store Manager', email:'manager@organicroot.in', mobile:'+91 65432 10987', orders:0, access:'Admin' },
-];
-
-let cart = [];
-let checkoutStep = 1;
-let checkoutData = {};
-let paymentMethod = 'upi';
-let selectedUpiApp = '';
-let selectedBank = '';
-let otpType = '';
-let otpTimerInterval = null;
-let generatedOtp = '123456';
-let editingProductId = null;
-
-// ============ INIT ============
-async function initStorefront() {
-  // Load products from Firestore; fall back to hardcoded array on failure
-  if (window._fb) {
-    try {
-      const { db, collection, getDocs } = window._fb;
-      const snap = await getDocs(collection(db, 'products'));
-      if (!snap.empty) {
-        const firestoreProducts = [];
-        snap.forEach(d => firestoreProducts.push({ firestoreId: d.id, ...d.data() }));
-        // Merge: Firestore wins on any field it has, local array is fallback for missing products
-        firestoreProducts.forEach(fp => {
-          const idx = products.findIndex(p => p.id == fp.id);
-          if (idx >= 0) Object.assign(products[idx], fp);
-          else products.push(fp);
-        });
-      }
-    } catch(e) {
-      console.warn('Firestore product load failed, using local data:', e);
-    }
-  }
-  renderProducts();
-}
-
-// ============ NAVIGATION ============
-function showHome() {
-  document.getElementById('mainSite').style.display = 'block';
-  document.getElementById('mainFooter').style.display = 'block';
-  document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-  window.scrollTo(0,0);
-}
-
-function showPage(page) {
-  document.getElementById('mainSite').style.display = 'none';
-  document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-  const el = document.getElementById('page-' + page);
-  if (el) {
-    el.classList.add('active');
-    document.getElementById('mainFooter').style.display = 'block';
-  }
-  window.scrollTo(0,0);
-  if (page === 'account') setTimeout(loadAccountPage, 100);
-}
-
-function showPageSection(page, sectionId) {
-  showPage(page);
-  setTimeout(function() {
-    const el = document.getElementById(sectionId);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 100);
-}
-
-function scrollToProducts() {
-  document.getElementById('productsSection').scrollIntoView({ behavior:'smooth' });
-}
-
-// ============ PRODUCTS ============
-let currentFilter = 'all';
-
-function renderProducts() {
-  const grid = document.getElementById('productsGrid');
-  const shopGrid = document.getElementById('shopProductsGrid');
-  const filtered = currentFilter === 'all' ? products : products.filter(p => p.cat === currentFilter);
-
-  const productHTML = (p) => `
-    <div class="product-card" style="cursor:pointer;">
-      <div class="product-img" style="padding:0;overflow:hidden;" onclick="openProductDetail(${p.id})">
-        <img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-        <span style="font-size:72px;display:none;width:100%;height:100%;align-items:center;justify-content:center;">${p.icon}</span>
-        ${p.badge ? `<div class="product-badge">${p.badge}</div>` : ''}
-        <button onclick="event.stopPropagation();addToWishlist(${p.id})" style="position:absolute;top:10px;right:10px;background:white;border:none;border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;" title="Add to Wishlist">♡</button>
-      </div>
-      <div class="product-info" onclick="openProductDetail(${p.id})">
-        <h3>${p.name}</h3>
-        <p>${p.desc}</p>
-        <div class="product-footer">
-          <div class="product-price">₹${p.price} <span>₹${p.origPrice}</span></div>
-          <button class="add-btn" onclick="event.stopPropagation();addToCart(${p.id})">+ Add</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  if (grid) grid.innerHTML = filtered.map(productHTML).join('');
-  if (shopGrid) shopGrid.innerHTML = products.map(productHTML).join('');
-  document.getElementById('adminProductCount').textContent = products.length;
-  renderAdminProducts();
-}
-
-function searchProducts(query) {
-  const grid = document.getElementById('productsGrid');
-  if (!grid) return;
-  const q = query.toLowerCase().trim();
-  const filtered = q === '' ? products : products.filter(p =>
-    p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q)
-  );
-  if (filtered.length === 0) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-muted);"><div style="font-size:48px;margin-bottom:16px;">🔍</div><p style="font-size:16px;">No products found for "<strong>' + query + '</strong>"</p></div>';
-    return;
-  }
-  const productHTML = (p) => `
-    <div class="product-card" style="cursor:pointer;">
-      <div class="product-img" style="padding:0;overflow:hidden;" onclick="openProductDetail(${p.id})">
-        <img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-        <span style="font-size:72px;display:none;width:100%;height:100%;align-items:center;justify-content:center;">${p.icon}</span>
-        ${p.badge ? `<div class="product-badge">${p.badge}</div>` : ''}
-        <button onclick="event.stopPropagation();addToWishlist(${p.id})" style="position:absolute;top:10px;right:10px;background:white;border:none;border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;" title="Add to Wishlist">♡</button>
-      </div>
-      <div class="product-info" onclick="openProductDetail(${p.id})">
-        <h3>${p.name}</h3>
-        <p>${p.desc}</p>
-        <div class="product-footer">
-          <div class="product-price">₹${p.price} <span>₹${p.origPrice}</span></div>
-          <button class="add-btn" onclick="event.stopPropagation();addToCart(${p.id})">+ Add</button>
-        </div>
-      </div>
-    </div>
-  `;
-  grid.innerHTML = filtered.map(productHTML).join('');
-}
-
-function openProductDetail(id) {
-  const p = products.find(x => x.id === id);
-  if (!p) return;
-  const related = products.filter(x => x.cat === p.cat && x.id !== p.id).slice(0, 3);
-  const detail = document.getElementById('productDetailContent');
-  detail.innerHTML = `
-    <div>
-      <img src="${p.img}" alt="${p.name}" style="width:100%;border-radius:16px;object-fit:cover;max-height:380px;">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      ${p.badge ? `<span style="background:var(--green);color:white;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;width:fit-content;">${p.badge}</span>` : ''}
-      <h1 style="color:var(--green-dark);font-size:24px;line-height:1.3;">${p.name}</h1>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-size:28px;font-weight:800;color:var(--green-dark);">₹${p.price}</span>
-        <span style="font-size:16px;color:var(--text-muted);text-decoration:line-through;">₹${p.origPrice}</span>
-        <span style="background:#dcfce7;color:#16a34a;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;">${Math.round((1-p.price/p.origPrice)*100)}% OFF</span>
-      </div>
-      <p style="color:var(--text-muted);line-height:1.8;font-size:15px;">${p.fullDesc || p.desc}</p>
-      <div style="background:#f0fdf4;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:12px;"><span style="font-weight:700;color:var(--green-dark);min-width:110px;">📦 Weight</span><span style="color:var(--text-muted);">${p.weight || 'As labelled'}</span></div>
-        <div style="display:flex;gap:12px;"><span style="font-weight:700;color:var(--green-dark);min-width:110px;">📍 Origin</span><span style="color:var(--text-muted);">${p.origin || 'India'}</span></div>
-        <div style="display:flex;gap:12px;"><span style="font-weight:700;color:var(--green-dark);min-width:110px;">🌿 Ingredients</span><span style="color:var(--text-muted);">${p.ingredients || p.name}</span></div>
-        <div style="display:flex;gap:12px;"><span style="font-weight:700;color:var(--green-dark);min-width:110px;">✅ Certified</span><span style="color:var(--text-muted);">${p.certifications || 'FSSAI Certified'}</span></div>
-        <div style="display:flex;gap:12px;"><span style="font-weight:700;color:var(--green-dark);min-width:110px;">📊 Stock</span><span style="color:${p.stock < 20 ? '#dc2626' : '#16a34a'};font-weight:600;">${p.stock < 20 ? 'Only ' + p.stock + ' left!' : 'In Stock (' + p.stock + ')'}</span></div>
-      </div>
-      <div style="display:flex;gap:12px;margin-top:8px;">
-        <button class="btn-primary" style="flex:1;font-size:16px;padding:14px;" onclick="addToCart(${p.id});showToast('🛒 Added to cart!')">+ Add to Cart</button>
-        <button onclick="addToWishlist(${p.id})" style="padding:14px 18px;border:2px solid var(--green);border-radius:12px;background:none;color:var(--green);font-size:20px;cursor:pointer;" title="Add to Wishlist">♡</button>
-      </div>
-    </div>
-  `;
-
-  // Related products
-  const relGrid = document.getElementById('relatedProducts');
-  if (relGrid) {
-    const relHTML = (rp) => `
-      <div class="product-card" style="cursor:pointer;" onclick="openProductDetail(${rp.id})">
-        <div class="product-img" style="padding:0;overflow:hidden;">
-          <img src="${rp.img}" alt="${rp.name}" style="width:100%;height:100%;object-fit:cover;display:block;">
-          ${rp.badge ? `<div class="product-badge">${rp.badge}</div>` : ''}
-        </div>
-        <div class="product-info">
-          <h3>${rp.name}</h3>
-          <p>${rp.desc}</p>
-          <div class="product-footer">
-            <div class="product-price">₹${rp.price} <span>₹${rp.origPrice}</span></div>
-            <button class="add-btn" onclick="event.stopPropagation();addToCart(${rp.id})">+ Add</button>
-          </div>
-        </div>
-      </div>
-    `;
-    relGrid.innerHTML = related.length ? related.map(relHTML).join('') : '<p style="color:var(--text-muted);">No related products.</p>';
-  }
-
-  // Back button behavior
-  document.getElementById('productBackBtn').onclick = () => showHome();
-
-  showPage('product');
-}
-
-function filterCat(cat, el) {
-  currentFilter = cat;
-  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  renderProducts();
-}
-
-// ============ CART ============
-function addToCart(id) {
-  const p = products.find(x => x.id === id);
-  if (!p) return;
-  const existing = cart.find(c => c.id === id);
-  if (existing) existing.qty++;
-  else cart.push({ ...p, qty: 1 });
-  updateCartUI();
-  showToast(`🛒 ${p.name} added!`);
-}
-
-function updateCartUI() {
-  const total = cart.reduce((s,i) => s + i.price * i.qty, 0);
-  const count = cart.reduce((s,i) => s + i.qty, 0);
-  document.getElementById('cartCount').textContent = count;
-  const body = document.getElementById('cartBody');
-  const footer = document.getElementById('cartFooter');
-  
-  if (cart.length === 0) {
-    body.innerHTML = `<div class="empty-cart"><div class="empty-cart-icon">🛒</div><p>Your cart is empty</p><p style="font-size:13px;color:var(--text-muted);margin-top:8px;">Add some organic goodness!</p></div>`;
-    footer.style.display = 'none';
-    return;
-  }
-  footer.style.display = 'block';
-  const delivery = total >= freeDeliveryThreshold ? 0 : deliveryFee;
-  body.innerHTML = cart.map(item => `
-    <div class="cart-item">
-      <div class="cart-item-icon">${item.icon}</div>
-      <div class="cart-item-info">
-        <div class="cart-item-name">${item.name}</div>
-        <div class="cart-item-price">₹${item.price} each</div>
-      </div>
-      <div class="qty-controls">
-        <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
-        <span class="qty-num">${item.qty}</span>
-        <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
-      </div>
-    </div>
-  `).join('');
-  document.getElementById('cartTotalAmt').textContent = `₹${total + delivery}`;
-  document.getElementById('deliveryNote').textContent = delivery === 0 ? '✅ Free delivery!' : `+ ₹${delivery} delivery (free over ₹${freeDeliveryThreshold})`;
-}
-
-function changeQty(id, delta) {
-  const item = cart.find(c => c.id === id);
-  if (!item) return;
-  item.qty += delta;
-  if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
-  updateCartUI();
-}
-
-function toggleCart() {
-  document.getElementById('cartSidebar').classList.toggle('open');
-  document.getElementById('cartOverlay').classList.toggle('active');
-}
-
-// ============ CHECKOUT ============
-function openCheckout() {
-  if (cart.length === 0) return;
-  toggleCart();
-  checkoutStep = 1;
-  checkoutData = { mobileVerified: false, emailVerified: false };
-  paymentMethod = 'upi';
-  selectedUpiApp = '';
-  selectedBank = '';
-  renderCheckout();
-  document.getElementById('checkoutOverlay').classList.add('active');
-}
-
-function renderCheckout() {
-  const total = cart.reduce((s,i) => s + i.price * i.qty, 0);
-  const delivery = total >= freeDeliveryThreshold ? 0 : deliveryFee;
-  const grandTotal = total + delivery;
-  const content = document.getElementById('checkoutContent');
-
-  ['step1','step2','step3','step4'].forEach((s,i) => {
-    const el = document.getElementById(s);
-    if (!el) return;
-    el.classList.remove('active','done');
-    if (i+1 < checkoutStep) el.classList.add('done');
-    else if (i+1 === checkoutStep) el.classList.add('active');
-  });
-
-  if (checkoutStep === 1) {
-    // Autofill from Firebase if signed in
-    if (window.currentUser && window._fb && !checkoutData.address) {
-      const { db, collection, getDocs } = window._fb;
-      getDocs(collection(db, 'users', window.currentUser.uid, 'addresses')).then(snap => {
-        if (!snap.empty) {
-          const a = snap.docs[0].data();
-          const addrEl = document.getElementById('coAddress');
-          const cityEl = document.getElementById('coCity');
-          const pinEl = document.getElementById('coPincode');
-          if (addrEl) addrEl.value = a.street || '';
-          if (cityEl) cityEl.value = a.city || '';
-          if (pinEl) pinEl.value = a.pin || '';
-        }
-      });
-      // Autofill name, email, phone from Firebase profile
-      const { doc, getDoc } = window._fb;
-      getDoc(doc(db, 'users', window.currentUser.uid)).then(snap => {
-        if (snap.exists()) {
-          const d = snap.data();
-          const nameEl = document.getElementById('coName');
-          const emailEl = document.getElementById('coEmail');
-          const phoneEl = document.getElementById('coPhone');
-          if (nameEl && !nameEl.value) nameEl.value = (d.firstName || '') + ' ' + (d.lastName || '');
-          if (emailEl && !emailEl.value) emailEl.value = d.email || window.currentUser.email || '';
-          if (phoneEl && !phoneEl.value) phoneEl.value = d.phone || '';
-        }
-      });
-    }
-    content.innerHTML = `
-      <div class="order-summary">
-        <h4>Order Summary</h4>
-        ${cart.map(i => `<div class="order-item"><span>${i.icon} ${i.name} × ${i.qty}</span><span>₹${i.price*i.qty}</span></div>`).join('')}
-        <hr class="order-divider">
-        <div class="order-item"><span>Delivery</span><span>${delivery===0?'<span style="color:green">FREE</span>':'₹'+delivery}</span></div>
-        <hr class="order-divider">
-        <div class="order-total"><span>Total</span><span>₹${grandTotal}</span></div>
-      </div>
-      <div class="form-group"><label>Full Name *</label><input type="text" placeholder="Priya Sharma" id="coName" value="${checkoutData.name||''}"></div>
-      <div class="form-group"><label>Email Address *</label><input type="email" placeholder="priya@example.com" id="coEmail" value="${checkoutData.email||''}"></div>
-      <div class="form-group"><label>Mobile Number *</label><input type="tel" placeholder="+91 98765 43210" id="coPhone" value="${checkoutData.phone||''}"></div>
-      <div class="form-group"><label>Delivery Address *</label><textarea placeholder="House no, Street, Area" rows="3" id="coAddress" style="resize:none;width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">${checkoutData.address||''}</textarea></div>
-      <div class="form-row">
-        <div class="form-group"><label>City *</label><input type="text" placeholder="Chennai" id="coCity" value="${checkoutData.city||''}"></div>
-        <div class="form-group"><label>Pincode *</label>
-          <div style="display:flex;gap:8px;align-items:flex-start;">
-            <input type="text" placeholder="600001" id="coPincode" value="${checkoutData.pincode||''}" maxlength="6" oninput="checkPincode(this.value)" style="flex:1;">
-            <div id="pincodeStatus" style="font-size:12px;padding:10px 12px;border-radius:8px;white-space:nowrap;display:${checkoutData.pincode?'block':'none'};"></div>
-          </div>
-          <div id="pincodeMsg" style="font-size:12px;margin-top:4px;"></div>
-        </div>
-      </div>
-      <button class="btn-primary" style="width:100%;" onclick="proceedFromDelivery()">Continue to Payment →</button>
-    `;
-  } else if (checkoutStep === 2) {
-    content.innerHTML = `
-      <div style="text-align:center;padding:10px 0;">
-        <div style="font-size:52px;margin-bottom:16px;">🔐</div>
-        <h3 style="color:var(--green-dark);margin-bottom:8px;">Verify Your Identity</h3>
-        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Verify your mobile and email before payment.</p>
-        <div style="display:flex;flex-direction:column;gap:14px;text-align:left;">
-          <div style="border:2px solid ${checkoutData.mobileVerified?'var(--green)':'var(--border)'};border-radius:16px;padding:18px;display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <div style="font-weight:700;font-size:14px;color:var(--green-dark);">📱 Mobile OTP</div>
-              <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${checkoutData.phone}</div>
-            </div>
-            ${checkoutData.mobileVerified
-              ? '<span style="background:#dcfce7;color:#16a34a;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;">✅ Verified</span>'
-              : `<button class="btn-primary" style="padding:8px 16px;font-size:13px;" onclick="startOtp('mobile')">Send OTP</button>`}
-          </div>
-          <div style="border:2px solid ${checkoutData.emailVerified?'var(--green)':'var(--border)'};border-radius:16px;padding:18px;display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <div style="font-weight:700;font-size:14px;color:var(--green-dark);">📧 Email OTP</div>
-              <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">${checkoutData.email}</div>
-            </div>
-            ${checkoutData.emailVerified
-              ? '<span style="background:#dcfce7;color:#16a34a;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;">✅ Verified</span>'
-              : `<button class="btn-primary" style="padding:8px 16px;font-size:13px;background:#9d174d;" onclick="startOtp('email')">Send OTP</button>`}
-          </div>
-        </div>
-        ${(checkoutData.mobileVerified && checkoutData.emailVerified) ? `
-          <button class="btn-primary" style="width:100%;margin-top:24px;" onclick="checkoutStep=3;renderCheckout()">Continue to Payment →</button>
-        ` : `
-          <p style="font-size:12px;color:var(--text-muted);margin-top:20px;">Please verify both mobile and email to proceed.</p>
-          <button class="btn-outline" style="margin-top:12px;" onclick="checkoutStep=1;renderCheckout()">← Back</button>
-        `}
-      </div>
-    `;
-  } else if (checkoutStep === 3) {
-    content.innerHTML = `
-      <div class="razorpay-header">
-        <div style="background:white;border-radius:8px;padding:4px 12px;font-weight:800;font-size:18px;color:#2563eb;letter-spacing:-1px;">razor<span style="color:#528ff0;">pay</span></div>
-        <span style="font-size:12px;">Secure Payment</span>
-        <div style="margin-left:auto;font-size:11px;opacity:0.8;">🔒 256-bit SSL</div>
-      </div>
-      <div class="razorpay-secure">🔒 Encrypted & secure · <strong style="color:var(--green);">₹${grandTotal}</strong></div>
-      <div class="payment-methods">
-        <div class="payment-method ${paymentMethod==='upi'?'selected':''}" onclick="selectPayment('upi',this)"><div style="font-size:24px;margin-bottom:4px;">📱</div>UPI</div>
-        <div class="payment-method ${paymentMethod==='card'?'selected':''}" onclick="selectPayment('card',this)"><div style="font-size:24px;margin-bottom:4px;">💳</div>Card</div>
-        <div class="payment-method ${paymentMethod==='netbanking'?'selected':''}" onclick="selectPayment('netbanking',this)"><div style="font-size:24px;margin-bottom:4px;">🏦</div>Net Banking</div>
-        <div class="payment-method ${paymentMethod==='cod'?'selected':''}" onclick="selectPayment('cod',this)"><div style="font-size:24px;margin-bottom:4px;">💵</div>COD</div>
-      </div>
-      ${paymentMethod==='upi'?`
-        <p style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Select UPI App</p>
-        <div class="upi-apps">
-          <div class="upi-app ${selectedUpiApp==='gpay'?'selected':''}" onclick="selectUpiApp('gpay',this)"><span class="app-icon">🔵</span>GPay</div>
-          <div class="upi-app ${selectedUpiApp==='phonepe'?'selected':''}" onclick="selectUpiApp('phonepe',this)"><span class="app-icon">🟣</span>PhonePe</div>
-          <div class="upi-app ${selectedUpiApp==='paytm'?'selected':''}" onclick="selectUpiApp('paytm',this)"><span class="app-icon">🔵</span>Paytm</div>
-          <div class="upi-app ${selectedUpiApp==='bhim'?'selected':''}" onclick="selectUpiApp('bhim',this)"><span class="app-icon">🇮🇳</span>BHIM</div>
-        </div>
-        <div class="form-group"><label>Or enter UPI ID</label><input type="text" placeholder="name@upi" id="upiId"></div>
-      `:''}
-      ${paymentMethod==='card'?`
-        <div class="card-network"><span>VISA</span><span>Mastercard</span><span>RuPay</span><span>Amex</span></div>
-        <div class="form-group"><label>Card Number</label><input type="text" placeholder="1234 5678 9012 3456" maxlength="19" id="cardNum" oninput="formatCard(this)"></div>
-        <div class="form-row">
-          <div class="form-group"><label>Expiry</label><input type="text" placeholder="MM/YY" maxlength="5" id="cardExp" oninput="formatExpiry(this)"></div>
-          <div class="form-group"><label>CVV</label><input type="password" placeholder="•••" maxlength="3" id="cardCvv"></div>
-        </div>
-        <div class="form-group"><label>Name on Card</label><input type="text" placeholder="PRIYA SHARMA" style="text-transform:uppercase;" id="cardName"></div>
-        <div style="background:#fef9c3;border-radius:10px;padding:10px 14px;font-size:12px;color:#854d0e;">🔒 3D Secure authenticated</div>
-      `:''}
-      ${paymentMethod==='netbanking'?`
-        <p style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px;">Select Bank</p>
-        <div class="netbank-list">
-          <div class="netbank-item ${selectedBank==='sbi'?'selected':''}" onclick="selectBank('sbi',this)">🏛️ SBI</div>
-          <div class="netbank-item ${selectedBank==='hdfc'?'selected':''}" onclick="selectBank('hdfc',this)">🏦 HDFC</div>
-          <div class="netbank-item ${selectedBank==='icici'?'selected':''}" onclick="selectBank('icici',this)">🔴 ICICI</div>
-          <div class="netbank-item ${selectedBank==='axis'?'selected':''}" onclick="selectBank('axis',this)">🟣 Axis</div>
-          <div class="netbank-item ${selectedBank==='kotak'?'selected':''}" onclick="selectBank('kotak',this)">🔴 Kotak</div>
-          <div class="netbank-item ${selectedBank==='other'?'selected':''}" onclick="selectBank('other',this)">🏧 Other</div>
-        </div>
-      `:''}
-      ${paymentMethod==='cod'?`
-        <div style="background:#fef9c3;border-radius:14px;padding:18px;font-size:14px;color:#854d0e;margin-bottom:16px;">
-          <div style="font-size:18px;margin-bottom:8px;">💵 Cash on Delivery</div>
-          <p>Pay <strong>₹${grandTotal}</strong> in cash on delivery. Keep exact change ready.</p>
-        </div>
-      `:''}
-      <div id="processingAnim" class="processing-anim">
-        <div class="spinner"></div>
-        <p style="font-weight:600;color:var(--green-dark);">Processing payment...</p>
-        <p style="font-size:13px;color:var(--text-muted);">Please don't close this window</p>
-      </div>
-      <div id="paymentFormArea">
-        <div style="display:flex;gap:12px;margin-top:4px;">
-          <button class="btn-outline" onclick="checkoutStep=2;renderCheckout()">← Back</button>
-          ${paymentMethod === 'cod' 
-            ? `<button class="btn-primary" style="flex:1;" onclick="checkoutStep=4;renderCheckout()">Confirm Order →</button>`
-            : `<button class="pay-btn-razorpay" style="flex:1;" onclick="processPayment(${grandTotal})">🔒 Pay ₹${grandTotal} Securely</button>`
-          }
-        </div>
-      </div>
-    `;
-  } else if (checkoutStep === 4) {
-    content.innerHTML = `
-      <div class="order-summary">
-        <h4>Review & Confirm</h4>
-        ${cart.map(i => `<div class="order-item"><span>${i.icon} ${i.name} × ${i.qty}</span><span>₹${i.price*i.qty}</span></div>`).join('')}
-        <hr class="order-divider">
-        <div class="order-item"><span>Delivery</span><span>${delivery===0?'FREE':'₹'+delivery}</span></div>
-        <div class="order-item"><span>Payment</span><span>${paymentMethod==='upi'?(selectedUpiApp||'UPI').toUpperCase():paymentMethod.toUpperCase()}</span></div>
-        <hr class="order-divider">
-        <div class="order-total"><span>Grand Total</span><span>₹${grandTotal}</span></div>
-      </div>
-      <div style="background:#f0fdf4;border-radius:14px;padding:16px;font-size:13px;margin-bottom:20px;">
-        <strong>📍 Delivering to:</strong><br>
-        ${checkoutData.name} · ${checkoutData.phone}<br>
-        ${checkoutData.address}, ${checkoutData.city} – ${checkoutData.pincode}
-      </div>
-      <div style="display:flex;gap:12px;">
-        <button class="btn-outline" onclick="checkoutStep=3;renderCheckout()">← Back</button>
-        <button class="btn-primary" style="flex:1;" onclick="placeOrder()">✅ Place Order</button>
-      </div>
-    `;
-  } else if (checkoutStep === 5) {
-    const orderId = '#ORG-' + (2900 + Math.floor(Math.random()*99));
-    content.innerHTML = `
-      <div class="success-screen">
-        <div class="success-icon">🎉</div>
-        <h2>Order Placed!</h2>
-        <p style="color:var(--green-dark);font-weight:700;font-size:18px;margin-bottom:4px;">${orderId}</p>
-        <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;">Expected delivery: 2–3 business days</p>
-        <div style="background:#f0fdf4;border-radius:16px;padding:20px;text-align:left;margin-bottom:24px;">
-          <p style="font-size:13px;font-weight:700;color:var(--green-dark);margin-bottom:12px;">📬 Notifications sent:</p>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;"><span style="background:#dbeafe;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">📱</span><div><strong>SMS</strong> · ${checkoutData.phone}</div></div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px;"><span style="background:#fce7f3;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">📧</span><div><strong>Email</strong> · ${checkoutData.email}</div></div>
-          <div style="display:flex;align-items:center;gap:10px;font-size:13px;"><span style="background:#dcfce7;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">💬</span><div><strong>WhatsApp</strong> · Order details shared</div></div>
-        </div>
-        <button class="btn-primary" onclick="closeModal('checkoutOverlay')">Continue Shopping 🌿</button>
-      </div>
-    `;
-  }
-}
-
-function proceedFromDelivery() {
-  const name = document.getElementById('coName')?.value?.trim();
-  const email = document.getElementById('coEmail')?.value?.trim();
-  const phone = document.getElementById('coPhone')?.value?.trim();
-  const address = document.getElementById('coAddress')?.value?.trim();
-  const city = document.getElementById('coCity')?.value?.trim();
-  const pincode = document.getElementById('coPincode')?.value?.trim();
-  if (!name||!email||!phone||!address||!city||!pincode) { showToast('⚠️ Please fill all required fields'); return; }
-  if (!/\S+@\S+\.\S+/.test(email)) { showToast('⚠️ Please enter a valid email'); return; }
-  checkoutData = { ...checkoutData, name, email, phone, address, city, pincode, mobileVerified: true, emailVerified: true };
-  checkoutStep = 3; renderCheckout();
-}
-
-function selectPayment(method, el) {
-  paymentMethod = method; selectedUpiApp = ''; selectedBank = '';
-  renderCheckout();
-}
-function selectUpiApp(app, el) {
-  selectedUpiApp = app;
-  document.querySelectorAll('.upi-app').forEach(a => a.classList.remove('selected'));
-  el.classList.add('selected');
-}
-function selectBank(bank, el) {
-  selectedBank = bank;
-  document.querySelectorAll('.netbank-item').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-}
-function formatCard(el) {
-  let v = el.value.replace(/\D/g,'').substring(0,16);
-  el.value = v.replace(/(.{4})/g,'$1 ').trim();
-}
-function formatExpiry(el) {
-  let v = el.value.replace(/\D/g,'');
-  if (v.length >= 2) v = v.substring(0,2) + '/' + v.substring(2,4);
-  el.value = v;
-}
-function processPayment(amount) {
-  if (paymentMethod==='upi' && !selectedUpiApp) {
-    const upiId = document.getElementById('upiId')?.value?.trim();
-    if (!upiId) { showToast('⚠️ Select UPI app or enter UPI ID'); return; }
-  }
-  if (paymentMethod==='card') {
-    const num = document.getElementById('cardNum')?.value?.replace(/\s/g,'');
-    if (!num||num.length<16) { showToast('⚠️ Enter valid 16-digit card number'); return; }
-  }
-  if (paymentMethod==='netbanking' && !selectedBank) { showToast('⚠️ Please select a bank'); return; }
-
-  const RAZORPAY_KEY = 'YOUR_RAZORPAY_KEY_ID'; // Replace with your test key
-
-  const options = {
-    key: RAZORPAY_KEY,
-    amount: amount * 100, // Razorpay expects paise
-    currency: 'INR',
-    name: 'OrganicRoot',
-    description: 'Fresh Organic Groceries',
-    image: 'https://i.imgur.com/n5tjHFD.png',
-    prefill: {
-      name: checkoutData.name || '',
-      email: checkoutData.email || '',
-      contact: checkoutData.phone || ''
-    },
-    theme: { color: '#2d6a4f' },
-    method: paymentMethod === 'upi' ? { upi: true } :
-            paymentMethod === 'card' ? { card: true } :
-            paymentMethod === 'netbanking' ? { netbanking: true } :
-            paymentMethod === 'wallet' ? { wallet: true } : {},
-    handler: function(response) {
-      // Payment successful
-      checkoutData.razorpayPaymentId = response.razorpay_payment_id;
-      document.getElementById('paymentFormArea').style.display = 'none';
-      document.getElementById('processingAnim').classList.add('show');
-      setTimeout(() => { checkoutStep = 4; renderCheckout(); }, 1000);
-    },
-    modal: {
-      ondismiss: function() {
-        showToast('⚠️ Payment cancelled. Try again.');
-      }
-    }
-  };
-
-  if (typeof Razorpay === 'undefined') {
-    showToast('⚠️ Payment gateway loading... try again in a moment.');
+  if (!window._fb) {
+    result.innerHTML = renderFakeTracking(input);
     return;
   }
 
-  const rzp = new Razorpay(options);
-  rzp.on('payment.failed', function(response) {
-    showToast('❌ Payment failed: ' + response.error.description);
-  });
-  rzp.open();
-}
-
-function placeOrder() {
-  const orderId = 'ORD' + Date.now().toString().slice(-6);
-  const itemsList = cart.map(i => `${i.name} x${i.qty} (\u20b9${i.price * i.qty})`).join(', ');
-  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const address = `${checkoutData.address}, ${checkoutData.city} - ${checkoutData.pincode}`;
-
-  document.getElementById('notifSmsTo').textContent = checkoutData.phone || 'your mobile';
-  document.getElementById('notifEmailTo').textContent = checkoutData.email || 'your email';
-  cart = []; updateCartUI();
-  checkoutStep = 5; renderCheckout();
-  setTimeout(() => {
-    document.getElementById('notifBanner').classList.add('show');
-    setTimeout(hideNotif, 8000);
-  }, 1200);
-
-  emailjs.send('service_h25a8n8', 'template_cpnbhxa', {
-    customer_name: checkoutData.name || 'Valued Customer',
-    order_id: orderId,
-    items: itemsList,
-    total: total,
-    address: address,
-    email: checkoutData.email
-  }).then(() => {
-    showToast('\ud83d\udce7 Order confirmation sent to ' + checkoutData.email);
-  }).catch(() => {
-    showToast('\u26a0\ufe0f Order placed! Email confirmation failed — check inbox later.');
-  });
-
-  // Save order to Firestore if user is signed in
-  if (window.currentUser && window._fb) {
-    const { db, collection, addDoc } = window._fb;
-    const user = window.currentUser;
-    addDoc(collection(db, 'users', user.uid, 'orders'), {
-      orderId, items: itemsList, total, address, placedAt: new Date().toISOString(),
-      status: 'Confirmed',
-      paymentId: checkoutData.razorpayPaymentId || 'COD',
-      paymentMethod: paymentMethod,
-      customerName: checkoutData.name || user.displayName || '',
-      customerEmail: checkoutData.email || user.email || ''
-    }).catch(() => {});
-  }
-}
-
-// ============ OTP ============
-let authOtpPhone = '';
-let authOtpAction = '';
-let authOtpEmail = '';
-let authOtpStep = '';
-
-let otpSessionId = null; // stores 2factor session ID for verification
-
-function openOtpModal(phone, action, step) {
-  authOtpPhone = phone;
-  authOtpAction = action;
-  authOtpStep = step || 'mobile';
-  otpType = 'auth';
-  const isEmail = authOtpStep === 'email';
-
-  if (isEmail) {
-    generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
-    emailjs.send('service_h25a8n8', 'template_ocg76de', {
-      name: document.getElementById('signUpName')?.value?.trim() || 'User',
-      otp: generatedOtp,
-      email: authOtpEmail
-    }).then(() => {
-      showToast('📧 OTP sent to ' + authOtpEmail);
-    }).catch(() => {
-      showToast('⚠️ Could not send email OTP — check your connection');
-    });
-  } else {
-    // Real SMS OTP via 2factor.in
-    sendSmsOtp(phone);
-  }
-
-  document.getElementById('otpIcon').textContent = isEmail ? '📧' : '📱';
-  document.getElementById('otpTitle').textContent = isEmail ? 'Verify Email Address' : 'Verify Mobile Number';
-  document.getElementById('otpSubtitle').textContent = isEmail ? 'Enter the 6-digit OTP sent to your email' : 'Enter the 6-digit OTP sent via SMS';
-  document.getElementById('otpSentTo').textContent = isEmail ? 'OTP sent to ' + authOtpEmail : 'OTP sent to ' + phone;
-  document.querySelectorAll('.otp-box').forEach(i => { i.value=''; i.classList.remove('filled'); });
-  document.getElementById('otpError').style.display = 'none';
-  document.getElementById('otpOverlay').classList.add('active');
-  const hint = document.getElementById('otpDemoHint');
-  if (hint) hint.style.display = 'none';
-  setTimeout(() => document.querySelector('.otp-box').focus(), 100);
-  startOtpTimer();
-}
-
-async function sendSmsOtp(phone) {
   try {
-    showToast('📱 Sending OTP to ' + phone + '...');
-    const res = await fetch('/.netlify/functions/send-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: phone.replace(/\D/g,'') })
-    });
-    const data = await res.json();
-    if (data.success) {
-      otpSessionId = data.sessionId;
-      showToast('📱 OTP sent to ' + phone);
-    } else {
-      showToast('⚠️ Could not send OTP: ' + (data.error || 'Try again'));
+    const { db, collection, getDocs, query, where } = window._fb;
+    const q = query(collection(db, 'orders'), where('orderId', '==', input));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      result.innerHTML = `<div class="card-block"><p style="text-align:center;color:var(--text-muted);padding:24px">No order found with ID <strong>${input}</strong>. Check the ID and try again.</p></div>`;
+      return;
     }
+
+    const order = snap.docs[0].data();
+    result.innerHTML = `
+      <div class="card-block">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h3 style="font-size:18px">Order #${order.orderId}</h3>
+          <span class="order-status status-${order.status === 'delivered' ? 'delivered' : 'processing'}">${order.status}</span>
+        </div>
+        <div class="tracking-steps">
+          <div class="track-step">
+            <div class="track-dot done"><span class="td-icon">✓</span></div>
+            <div class="track-info"><h4>Order Confirmed</h4><p>Your order has been received and is being prepared.</p></div>
+          </div>
+          <div class="track-step">
+            <div class="track-dot ${order.status !== 'confirmed' ? 'done' : ''}">🌿</div>
+            <div class="track-info"><h4>Packed & Ready</h4><p>Fresh-picked and packed with care.</p></div>
+          </div>
+          <div class="track-step">
+            <div class="track-dot ${order.status === 'transit' || order.status === 'delivered' ? 'done' : ''}">🚚</div>
+            <div class="track-info"><h4>Out for Delivery</h4><p>On the way to your address.</p></div>
+          </div>
+          <div class="track-step">
+            <div class="track-dot ${order.status === 'delivered' ? 'done' : ''}">🏠</div>
+            <div class="track-info"><h4>Delivered</h4><p>${order.status === 'delivered' ? 'Successfully delivered!' : 'Awaiting delivery.'}</p></div>
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+        <p style="font-size:14px;color:var(--text-muted)">Delivering to: <strong style="color:var(--clay)">${order.address}</strong></p>
+        <p style="font-size:14px;color:var(--text-muted);margin-top:6px">Total: <strong style="color:var(--clay)">₹${order.total}</strong></p>
+      </div>`;
   } catch (err) {
-    showToast('⚠️ SMS service unavailable. Try again.');
+    result.innerHTML = `<div class="card-block"><p style="color:var(--text-muted);text-align:center;padding:20px">Unable to look up order right now. Please try again or contact support.</p></div>`;
   }
 }
 
-function startOtp(type) {
-  otpType = type;
-  document.getElementById('otpIcon').textContent = type==='mobile'?'📱':'📧';
-  document.getElementById('otpTitle').textContent = type==='mobile'?'Verify Mobile Number':'Verify Email Address';
-  document.getElementById('otpSubtitle').textContent = type==='mobile'?'Enter the 6-digit OTP sent via SMS':'Enter the 6-digit OTP sent to your email';
-  document.getElementById('otpSentTo').textContent = type==='mobile'?`OTP sent to ${checkoutData.phone}`:`OTP sent to ${checkoutData.email}`;
-  document.querySelectorAll('.otp-box').forEach(i => { i.value=''; i.classList.remove('filled'); });
-  document.getElementById('otpError').style.display = 'none';
-  document.getElementById('otpOverlay').classList.add('active');
-  setTimeout(() => document.querySelector('.otp-box').focus(), 100);
-  startOtpTimer();
-  showToast(type==='mobile'?`📱 OTP sent to ${checkoutData.phone}`:`📧 OTP sent to ${checkoutData.email}`);
-}
-
-function startOtpTimer() {
-  clearInterval(otpTimerInterval);
-  let t = 30;
-  const el = document.getElementById('otpTimer');
-  el.textContent = t + 's';
-  otpTimerInterval = setInterval(() => {
-    t--;
-    el.textContent = t + 's';
-    if (t<=0) clearInterval(otpTimerInterval);
-  }, 1000);
-}
-
-function resendOtp() {
-  document.querySelectorAll('.otp-box').forEach(i => { i.value=''; i.classList.remove('filled'); });
-  document.getElementById('otpError').style.display = 'none';
-  startOtpTimer();
-  const isEmail = authOtpStep === 'email' || otpType === 'email';
-  if (isEmail) {
-    generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
-    emailjs.send('service_h25a8n8', 'template_ocg76de', {
-      name: document.getElementById('signUpName')?.value?.trim() || 'User',
-      otp: generatedOtp,
-      email: authOtpEmail
-    }).catch(() => {});
-    showToast('📧 OTP resent to email!');
-  } else {
-    sendSmsOtp(authOtpPhone || checkoutData.phone);
-  }
-}
-
-function otpMove(el, idx) {
-  el.classList.toggle('filled', el.value !== '');
-  if (el.value && idx < 5) document.querySelectorAll('.otp-box')[idx+1].focus();
-}
-
-function otpBack(e, el, idx) {
-  if (e.key==='Backspace' && !el.value && idx>0) document.querySelectorAll('.otp-box')[idx-1].focus();
-}
-
-async function verifyOtp() {
-  const entered = Array.from(document.querySelectorAll('.otp-box')).map(i => i.value).join('');
-  if (entered.length < 6) { showToast('⚠️ Enter all 6 digits'); return; }
-
-  const isEmail = authOtpStep === 'email' || otpType === 'email';
-
-  if (isEmail) {
-    // Email OTP — verify locally
-    if (entered === generatedOtp) {
-      otpSuccess();
-    } else {
-      otpFail();
-    }
-  } else {
-    // Mobile OTP — verify via 2factor.in
-    if (!otpSessionId) {
-      // Fallback if session ID missing
-      otpFail();
-      return;
-    }
-    try {
-      const res = await fetch('/.netlify/functions/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: otpSessionId, otp: entered })
-      });
-      const data = await res.json();
-      if (data.success) {
-        otpSuccess();
-      } else {
-        otpFail();
-      }
-    } catch (err) {
-      otpFail();
-    }
-  }
-}
-
-function otpSuccess() {
-  clearInterval(otpTimerInterval);
-  closeModal('otpOverlay');
-  otpSessionId = null;
-  if (otpType === 'auth') {
-    if (authOtpAction === 'signup' && authOtpStep === 'mobile') {
-      showToast('✅ Mobile verified! Now verify your email.');
-      openOtpModal(authOtpPhone, 'signup', 'email');
-    } else if (authOtpAction === 'signup' && authOtpStep === 'email') {
-      showToast('✅ Account created! Welcome to OrganicRoot 🌿');
-    } else {
-      showToast('✅ Signed in! Welcome to OrganicRoot 🌿');
-      window.currentUser = window.currentUser || { displayName: authOtpPhone, email: '' };
-      const btn = document.getElementById('navAccountBtn');
-      if (btn) { btn.textContent = '👤 ' + authOtpPhone; btn.onclick = () => showPage('account'); }
-    }
-  } else {
-    if (otpType==='mobile') checkoutData.mobileVerified = true;
-    else checkoutData.emailVerified = true;
-    showToast(`✅ ${otpType==='mobile'?'Mobile':'Email'} verified!`);
-    renderCheckout();
-  }
-}
-
-function otpFail() {
-  document.getElementById('otpError').style.display = 'block';
-  document.querySelectorAll('.otp-box').forEach(i => { i.value=''; i.classList.remove('filled'); });
-  document.querySelector('.otp-box').focus();
-}
-
-// ============ AUTH ============
-let signInOtpMode = false;
-
-function openSignIn() { document.getElementById('signInOverlay').classList.add('active'); }
-function switchToSignUp() { closeModal('signInOverlay'); document.getElementById('signUpOverlay').classList.add('active'); }
-function switchToSignIn() { closeModal('signUpOverlay'); openSignIn(); }
-
-function switchSignInMode() {
-  signInOtpMode = !signInOtpMode;
-  document.getElementById('signInEmailMode').style.display = signInOtpMode ? 'none' : 'block';
-  document.getElementById('signInOtpMode').style.display = signInOtpMode ? 'block' : 'none';
-}
-
-function togglePassword(id) {
-  const inp = document.getElementById(id);
-  inp.type = inp.type === 'password' ? 'text' : 'password';
-}
-
-function handleSignIn() {
-  const emailOrPhone = document.getElementById('signInEmail')?.value?.trim();
-  const password = document.getElementById('signInPassword')?.value;
-  if (!emailOrPhone) { showToast('⚠️ Enter your email or phone'); return; }
-  if (!password) { showToast('⚠️ Enter your password'); return; }
-  if (!window._fb) { showToast('⚠️ Firebase not ready'); return; }
-  const { auth, signInWithEmailAndPassword } = window._fb;
-  signInWithEmailAndPassword(auth, emailOrPhone, password)
-    .then(() => { closeModal('signInOverlay'); showToast('✅ Signed in! Welcome back 🌿'); })
-    .catch(e => showToast('⚠️ ' + (e.code === 'auth/invalid-credential' ? 'Wrong email or password' : e.message)));
-}
-
-function handleSignInOtp() {
-  const phone = document.getElementById('signInPhone')?.value?.trim();
-  if (!phone || phone.length < 10) { showToast('⚠️ Enter a valid mobile number'); return; }
-  closeModal('signInOverlay');
-  openOtpModal(phone, 'signin');
-}
-
-function handleForgotPassword() {
-  const emailOrPhone = document.getElementById('signInEmail')?.value?.trim();
-  if (!emailOrPhone || !emailOrPhone.includes('@')) { showToast('⚠️ Enter your email address first'); return; }
-  if (!window._fb) return;
-  const { auth, sendPasswordResetEmail } = window._fb;
-  sendPasswordResetEmail(auth, emailOrPhone)
-    .then(() => showToast('📧 Password reset email sent!'))
-    .catch(() => showToast('⚠️ Could not send reset email'));
-}
-
-function handleSignUp() {
-  const first = document.getElementById('signUpFirst')?.value?.trim();
-  const last = document.getElementById('signUpLast')?.value?.trim();
-  const email = document.getElementById('signUpEmail')?.value?.trim();
-  const phone = document.getElementById('signUpPhone')?.value?.trim();
-  const password = document.getElementById('signUpPassword')?.value;
-  const confirm = document.getElementById('signUpConfirm')?.value;
-  const newsletter = document.getElementById('signUpNewsletter')?.checked;
-  if (!first) { showToast('⚠️ Enter your first name'); return; }
-  if (!last) { showToast('⚠️ Enter your last name'); return; }
-  if (!email || !email.includes('@')) { showToast('⚠️ Enter a valid email'); return; }
-  if (!phone || phone.length < 10) { showToast('⚠️ Enter a valid phone number'); return; }
-  if (!password || password.length < 6) { showToast('⚠️ Password must be at least 6 characters'); return; }
-  if (password !== confirm) { showToast('⚠️ Passwords do not match'); return; }
-  if (!window._fb) { showToast('⚠️ Firebase not ready'); return; }
-  const { auth, db, createUserWithEmailAndPassword, updateProfile, doc, setDoc } = window._fb;
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(cred => {
-      const user = cred.user;
-      return updateProfile(user, { displayName: first + ' ' + last }).then(() =>
-        setDoc(doc(db, 'users', user.uid), {
-          firstName: first, lastName: last, email, phone, newsletter,
-          createdAt: new Date().toISOString()
-        })
-      );
-    })
-    .then(() => {
-      authOtpEmail = email;
-      closeModal('signUpOverlay');
-      openOtpModal(phone, 'signup', 'mobile');
-    })
-    .catch(e => showToast('⚠️ ' + (e.code === 'auth/email-already-in-use' ? 'Email already registered' : e.message)));
-}
-
-function handleSignOut() {
-  if (!window._fb) return;
-  window._fb.signOut(window._fb.auth).then(() => {
-    showToast('👋 Signed out successfully');
-    showHome();
-  });
-}
-
-// ============ ACCOUNT DASHBOARD ============
-function showAccountTab(tab) {
-  ['profile','orders','address','wishlist'].forEach(t => {
-    document.getElementById('accountTab-' + t).style.display = t === tab ? 'block' : 'none';
-    const btn = document.getElementById('tab-' + t);
-    if (btn) {
-      btn.style.background = t === tab ? 'var(--green)' : '#f0fdf4';
-      btn.style.color = t === tab ? 'white' : 'var(--green)';
-      btn.style.border = t === tab ? 'none' : '2px solid var(--green-pale)';
-    }
-  });
-  if (tab === 'orders') loadOrders();
-  if (tab === 'address') loadAddresses();
-  if (tab === 'wishlist') loadWishlist();
-}
-
-function loadAccountPage() {
-  if (!window.currentUser) { openSignIn(); return; }
-  const user = window.currentUser;
-  document.getElementById('accountWelcome').textContent = 'Welcome, ' + (user.displayName || user.email);
-  document.getElementById('profileEmail').value = user.email || '';
-  const { db, doc, getDoc } = window._fb;
-  getDoc(doc(db, 'users', user.uid)).then(snap => {
-    if (snap.exists()) {
-      const d = snap.data();
-      document.getElementById('profileFirst').value = d.firstName || '';
-      document.getElementById('profileLast').value = d.lastName || '';
-      document.getElementById('profilePhone').value = d.phone || '';
-    }
-  });
-  showAccountTab('profile');
-}
-
-function saveProfile() {
-  if (!window.currentUser || !window._fb) return;
-  const first = document.getElementById('profileFirst').value.trim();
-  const last = document.getElementById('profileLast').value.trim();
-  const phone = document.getElementById('profilePhone').value.trim();
-  const { db, doc, updateDoc, updateProfile, auth } = window._fb;
-  updateProfile(auth.currentUser, { displayName: first + ' ' + last })
-    .then(() => updateDoc(doc(db, 'users', window.currentUser.uid), { firstName: first, lastName: last, phone }))
-    .then(() => showToast('✅ Profile updated!'))
-    .catch(() => showToast('⚠️ Could not save profile'));
-}
-
-// Serviceable pincodes — add your actual delivery areas here
-const serviceablePincodes = [
-  '600001','600002','600003','600004','600005','600006','600007','600008','600009','600010',
-  '600011','600012','600013','600014','600015','600016','600017','600018','600019','600020',
-  '600021','600022','600023','600024','600025','600026','600028','600029','600030','600031',
-  '600032','600033','600034','600035','600036','600037','600038','600039','600040','600041',
-  '600042','600043','600044','600045','600046','600047','600048','600049','600050','600051',
-  '600052','600053','600054','600055','600056','600057','600058','600059','600060','600061',
-  '600062','600063','600064','600065','600066','600067','600068','600069','600070','600071',
-  '600072','600073','600074','600075','600076','600077','600078','600079','600080','600081',
-  '600082','600083','600084','600085','600086','600087','600088','600089','600090','600091',
-  '600092','600093','600094','600095','600096','600097','600098','600099','600100','600101',
-  '600102','600103','600104','600106','600107','600108','600109','600110','600111','600112',
-  '600113','600114','600115','600116','600117','600118','600119','600120','600122','600123',
-  '600124','600125','600126','600128','600129','600130','600132','600133','600134','600135'
-];
-
-function checkPincode(val) {
-  const statusEl = document.getElementById('pincodeStatus');
-  const msgEl = document.getElementById('pincodeMsg');
-  if (!statusEl || !msgEl) return;
-  if (val.length < 6) {
-    statusEl.style.display = 'none';
-    msgEl.textContent = '';
-    return;
-  }
-  statusEl.style.display = 'block';
-  if (serviceablePincodes.includes(val)) {
-    statusEl.style.background = '#dcfce7';
-    statusEl.style.color = '#166534';
-    statusEl.textContent = '✅ Delivery available';
-    msgEl.style.color = '#166534';
-    msgEl.textContent = 'Expected delivery: 1–2 business days';
-  } else {
-    statusEl.style.background = '#fee2e2';
-    statusEl.style.color = '#991b1b';
-    statusEl.textContent = '❌ Not serviceable';
-    msgEl.style.color = '#991b1b';
-    msgEl.textContent = 'We don\'t deliver to this pincode yet. Try a nearby pincode.';
-  }
-}
-
-function saveAddress() {
-  if (!window.currentUser || !window._fb) return;
-  const street = document.getElementById('addrStreet').value.trim();
-  const city = document.getElementById('addrCity').value.trim();
-  const pin = document.getElementById('addrPin').value.trim();
-  if (!street || !city || !pin) { showToast('⚠️ Fill all address fields'); return; }
-  const { db, collection, addDoc } = window._fb;
-  addDoc(collection(db, 'users', window.currentUser.uid, 'addresses'), { street, city, pin, createdAt: new Date().toISOString() })
-    .then(() => { showToast('✅ Address saved!'); loadAddresses(); document.getElementById('addrStreet').value=''; document.getElementById('addrCity').value=''; document.getElementById('addrPin').value=''; })
-    .catch(() => showToast('⚠️ Could not save address'));
-}
-
-function loadAddresses() {
-  if (!window.currentUser || !window._fb) return;
-  const { db, collection, getDocs } = window._fb;
-  getDocs(collection(db, 'users', window.currentUser.uid, 'addresses')).then(snap => {
-    const el = document.getElementById('addressList');
-    if (snap.empty) { el.innerHTML = '<p style="color:var(--text-muted);">No saved addresses yet.</p>'; return; }
-    el.innerHTML = snap.docs.map(d => {
-      const a = d.data();
-      return `<div style="background:#f0fdf4;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid var(--green-pale);">
-        <p style="font-weight:600;color:var(--green-dark);">${a.street}</p>
-        <p style="color:var(--text-muted);font-size:14px;">${a.city} — ${a.pin}</p>
-      </div>`;
-    }).join('');
-  });
-}
-
-function loadOrders() {
-  if (!window.currentUser || !window._fb) return;
-  const { db, collection, getDocs } = window._fb;
-  getDocs(collection(db, 'users', window.currentUser.uid, 'orders')).then(snap => {
-    const el = document.getElementById('ordersList');
-    if (snap.empty) { el.innerHTML = '<p style="color:var(--text-muted);">No orders yet. Start shopping!</p>'; return; }
-    el.innerHTML = snap.docs.map(d => {
-      const o = d.data();
-      const status = o.status || 'Confirmed';
-      const statusColors = {
-        'Confirmed': '#2d6a4f',
-        'Processing': '#1d4ed8',
-        'Out for Delivery': '#d97706',
-        'Delivered': '#16a34a',
-        'Cancelled': '#dc2626'
-      };
-      const statusIcons = {
-        'Confirmed': '✅',
-        'Processing': '⚙️',
-        'Out for Delivery': '🚚',
-        'Delivered': '📦',
-        'Cancelled': '❌'
-      };
-      const bg = statusColors[status] || '#2d6a4f';
-      const icon = statusIcons[status] || '✅';
-      const date = o.placedAt ? new Date(o.placedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '';
-      return `<div style="background:#f0fdf4;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid var(--green-pale);">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-          <p style="font-weight:700;color:var(--green-dark);">${o.orderId}</p>
-          <span style="background:${bg};color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">${icon} ${status}</span>
-        </div>
-        <p style="color:var(--text-muted);font-size:14px;margin-top:6px;">${o.items} · ₹${o.total}${date ? ' · ' + date : ''}</p>
-      </div>`;
-    }).join('');
-  });
-}
-
-function loadWishlist() {
-  if (!window.currentUser || !window._fb) return;
-  const { db, collection, getDocs } = window._fb;
-  getDocs(collection(db, 'users', window.currentUser.uid, 'wishlist')).then(snap => {
-    const el = document.getElementById('wishlistItems');
-    if (snap.empty) { el.innerHTML = '<p style="color:var(--text-muted);">Your wishlist is empty.</p>'; return; }
-    el.innerHTML = snap.docs.map(d => {
-      const w = d.data();
-      return `<div style="background:#f0fdf4;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid var(--green-pale);display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <p style="font-weight:600;color:var(--green-dark);">${w.name}</p>
-          <p style="color:var(--text-muted);font-size:14px;">₹${w.price}</p>
-        </div>
-        <button onclick="addToCartById(${w.productId})" class="btn-primary" style="font-size:13px;padding:8px 16px;">Add to Cart</button>
-      </div>`;
-    }).join('');
-  });
-}
-
-function addToWishlist(productId) {
-  if (!window.currentUser) { openSignIn(); return; }
-  const p = products.find(x => x.id === productId);
-  if (!p) return;
-  const { db, collection, addDoc } = window._fb;
-  addDoc(collection(db, 'users', window.currentUser.uid, 'wishlist'), {
-    productId: p.id, name: p.name, price: p.price, addedAt: new Date().toISOString()
-  }).then(() => showToast('❤️ Added to wishlist!'))
-    .catch(() => showToast('⚠️ Could not add to wishlist'));
-}
-
-function addToCartById(productId) {
-  const p = products.find(x => x.id === productId);
-  if (p) { addToCart(p); showToast('🛒 ' + p.name + ' added to cart!'); }
-}
-
-// ============ WHATSAPP ============
-function toggleWaPopup() { document.getElementById('waPopup').classList.toggle('open'); }
-function waChat(msg) {
-  const phone = '919876543210';
-  const text = encodeURIComponent('Hi OrganicRoot! ' + msg);
-  window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
-  document.getElementById('waPopup').classList.remove('open');
-}
-
-// ============ ADMIN ============
-function showAdminLogin() { document.getElementById('adminLoginOverlay').classList.add('active'); }
-function doAdminLogin() {
-  const pass = document.getElementById('adminPassInput')?.value;
-  if (pass === adminPassword) {
-    closeModal('adminLoginOverlay');
-    document.getElementById('mainSite').style.display = 'none';
-    document.getElementById('mainFooter').style.display = 'none';
-    document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-    document.getElementById('adminPanel').style.display = 'block';
-    loadAdminDashboard();
-    loadAdminProductsFromFirestore();
-    renderAdminCustomers();
-    showToast('✅ Welcome to Admin Panel!');
-  } else {
-    showToast('❌ Incorrect password');
-  }
-}
-function adminLogout() {
-  document.getElementById('adminPanel').style.display = 'none';
-  showHome();
-  showToast('👋 Logged out from admin panel');
-}
-function adminTab(tab, el) {
-  document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('admin-' + tab).classList.add('active');
-  if (tab === 'dashboard') loadAdminDashboard();
-  if (tab === 'orders') loadAdminOrders();
-  if (tab === 'products') loadAdminProductsFromFirestore();
-}
-
-function renderAdminProducts() {
-  const tbody = document.getElementById('adminProductsTable');
-  if (!tbody) return;
-  if (products.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">No products yet.</td></tr>'; return; }
-  tbody.innerHTML = products.map(p => `
-    <tr>
-      <td style="display:flex;align-items:center;gap:10px;">
-        ${p.img ? `<img src="${p.img}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;" onerror="this.style.display='none'">` : `<span style="font-size:20px;">${p.icon}</span>`}
-        <div><div style="font-weight:600;">${p.name}</div><div style="font-size:12px;color:var(--text-muted);">${p.weight||''}</div></div>
-      </td>
-      <td><span class="badge badge-green">${p.cat}</span></td>
-      <td>₹${p.price}</td>
-      <td>${p.stock}</td>
-      <td>${p.origin||'—'}</td>
-      <td>
-        <button class="btn-outline" style="padding:5px 12px;font-size:12px;margin-right:6px;" onclick="editProduct(${p.firestoreId||p.id})">Edit</button>
-        <button style="padding:5px 12px;font-size:12px;background:var(--red);color:white;border:none;border-radius:8px;cursor:pointer;" onclick="deleteProduct(${p.firestoreId||p.id})">Delete</button>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function renderAdminCustomers() {
-  const tbody = document.getElementById('adminCustomersTable');
-  if (!tbody) return;
-  tbody.innerHTML = customers.map((c,i) => `
-    <tr>
-      <td>${c.name}</td>
-      <td>${c.email}</td>
-      <td>${c.mobile}</td>
-      <td>${c.orders}</td>
-      <td>
-        <select onchange="changeCustomerAccess(${i},this)" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;">
-          <option ${c.access==='Customer'?'selected':''}>Customer</option>
-          <option ${c.access==='Viewer'?'selected':''}>Viewer</option>
-          <option ${c.access==='Manager'?'selected':''}>Manager</option>
-          <option ${c.access==='Admin'?'selected':''}>Admin</option>
-        </select>
-      </td>
-      <td>
-        <button style="padding:5px 12px;font-size:12px;background:var(--red);color:white;border:none;border-radius:8px;cursor:pointer;" onclick="deleteCustomer(${i})">Remove</button>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function changeCustomerAccess(i, el) {
-  customers[i].access = el.value;
-  showToast(`✅ Access updated to ${el.value}`);
-}
-
-function deleteCustomer(i) {
-  if (!confirm('Remove this customer?')) return;
-  customers.splice(i,1);
-  renderAdminCustomers();
-  showToast('✅ Customer removed');
-}
-
-function showAddCustomer() { document.getElementById('addCustomerOverlay').classList.add('active'); }
-function saveCustomer() {
-  const name = document.getElementById('newCustName')?.value?.trim();
-  const email = document.getElementById('newCustEmail')?.value?.trim();
-  const mobile = document.getElementById('newCustMobile')?.value?.trim();
-  const access = document.getElementById('newCustAccess')?.value;
-  if (!name||!email) { showToast('⚠️ Name and email required'); return; }
-  customers.push({ name, email, mobile, orders:0, access });
-  renderAdminCustomers();
-  closeModal('addCustomerOverlay');
-  showToast('✅ Customer added!');
-}
-
-// ============ ADMIN FIRESTORE FUNCTIONS ============
-
-async function loadAdminDashboard() {
-  if (!window._fb) return;
-  const { db, collectionGroup, getDocs, collection } = window._fb;
-  try {
-    // Orders via collectionGroup
-    const orderSnap = await getDocs(collectionGroup(db, 'orders'));
-    let totalRevenue = 0, orderCount = 0;
-    const recentOrders = [];
-    orderSnap.forEach(d => {
-      const o = d.data();
-      orderCount++;
-      totalRevenue += parseFloat(o.total) || 0;
-      recentOrders.push(o);
-    });
-    recentOrders.sort((a,b) => (b.placedAt||'').localeCompare(a.placedAt||''));
-    const revEl = document.getElementById('adminRevenue');
-    const ordEl = document.getElementById('adminOrderCount');
-    const prodEl = document.getElementById('adminProductCount');
-    if (revEl) revEl.textContent = '₹' + totalRevenue.toLocaleString('en-IN');
-    if (ordEl) ordEl.textContent = orderCount;
-    // Customers: count user docs
-    const userSnap = await getDocs(collection(db, 'users'));
-    const custEl = document.getElementById('adminCustomerCount');
-    if (custEl) custEl.textContent = userSnap.size;
-    if (prodEl) prodEl.textContent = products.length;
-    // Low stock warning
-    const lowStock = products.filter(p => (p.stock || 0) <= 10);
-    const lowStockEl = document.getElementById('adminLowStockAlert');
-    if (lowStockEl) {
-      if (lowStock.length > 0) {
-        lowStockEl.style.display = 'block';
-        lowStockEl.innerHTML = `<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:12px;padding:16px;margin-bottom:24px;">
-          <p style="font-weight:700;color:#92400e;margin-bottom:10px;">⚠️ Low Stock Alert — ${lowStock.length} product${lowStock.length>1?'s':''} running low</p>
-          ${lowStock.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #fde68a;">
-            <span style="font-size:14px;color:#78350f;">${p.icon||'🌿'} ${p.name}</span>
-            <span style="font-size:13px;font-weight:700;color:${p.stock<=3?'#dc2626':'#d97706'};">${p.stock} left</span>
-          </div>`).join('')}
-        </div>`;
-      } else {
-        lowStockEl.style.display = 'none';
-      }
-    }
-    // Recent orders table
-    const tbody = document.getElementById('adminDashboardOrders');
-    if (orderCount === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">No orders yet.</td></tr>';
-    } else {
-      tbody.innerHTML = recentOrders.slice(0,10).map(o => {
-        const statusColor = o.status==='Delivered'?'badge-green':o.status==='Cancelled'?'badge-red':o.status==='Processing'?'badge-blue':'badge-yellow';
-        const date = o.placedAt ? new Date(o.placedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '—';
-        return `<tr><td>${o.orderId||'—'}</td><td>${o.customerName||'—'}</td><td>${o.items||'—'}</td><td>₹${o.total||0}</td><td><span class="badge ${statusColor}">${o.status||'Confirmed'}</span></td><td>${date}</td></tr>`;
-      }).join('');
-    }
-  } catch(e) {
-    console.error('Dashboard load error:', e);
-    document.getElementById('adminRevenue').textContent = 'Error';
-  }
-}
-
-async function loadAdminOrders() {
-  if (!window._fb) return;
-  const { db, collectionGroup, getDocs } = window._fb;
-  const tbody = document.getElementById('adminOrdersTable');
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">Loading…</td></tr>';
-  try {
-    const snap = await getDocs(collectionGroup(db, 'orders'));
-    const orders = [];
-    snap.forEach(d => { orders.push({ docRef: d.ref, ...d.data() }); });
-    orders.sort((a,b) => (b.placedAt||'').localeCompare(a.placedAt||''));
-    if (orders.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">No orders yet.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = orders.map((o,i) => {
-      const statusColor = o.status==='Delivered'?'badge-green':o.status==='Cancelled'?'badge-red':o.status==='Processing'?'badge-blue':'badge-yellow';
-      const date = o.placedAt ? new Date(o.placedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
-      const docPath = o.docRef ? o.docRef.path : '';
-      return `<tr>
-        <td>${o.orderId||'—'}</td>
-        <td>${o.customerName||o.customerEmail||'—'}</td>
-        <td>₹${o.total||0}</td>
-        <td><span class="badge ${statusColor}">${o.status||'Confirmed'}</span></td>
-        <td>${date}</td>
-        <td><select onchange="adminUpdateOrderStatus(this,'${docPath}')" style="padding:6px;border-radius:8px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:13px;">
-          <option ${(o.status||'Confirmed')==='Confirmed'?'selected':''}>Confirmed</option>
-          <option ${o.status==='Processing'?'selected':''}>Processing</option>
-          <option ${o.status==='Out for Delivery'?'selected':''}>Out for Delivery</option>
-          <option ${o.status==='Delivered'?'selected':''}>Delivered</option>
-          <option ${o.status==='Cancelled'?'selected':''}>Cancelled</option>
-        </select></td>
-      </tr>`;
-    }).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;padding:24px;">Error loading orders: ${e.message}</td></tr>`;
-  }
-}
-
-async function adminUpdateOrderStatus(el, docPath) {
-  if (!window._fb || !docPath) { showToast('⚠️ Cannot update: missing reference'); return; }
-  const { db, doc, updateDoc } = window._fb;
-  try {
-    await updateDoc(doc(db, docPath), { status: el.value });
-    showToast('✅ Order status updated to "' + el.value + '"');
-  } catch(e) {
-    showToast('❌ Failed to update: ' + e.message);
-  }
-}
-
-async function loadAdminProductsFromFirestore() {
-  if (!window._fb) { renderAdminProducts(); return; }
-  const { db, collection, getDocs } = window._fb;
-  try {
-    const snap = await getDocs(collection(db, 'products'));
-    if (!snap.empty) {
-      const firestoreProducts = [];
-      snap.forEach(d => firestoreProducts.push({ firestoreId: d.id, ...d.data() }));
-      // Merge: override local products array with Firestore data (keep local as fallback)
-      firestoreProducts.forEach(fp => {
-        const existing = products.find(p => p.id == fp.id || p.firestoreId === fp.firestoreId);
-        if (!existing) products.push(fp);
-        else Object.assign(existing, fp);
-      });
-    }
-  } catch(e) { console.warn('Firestore products load failed, using local:', e); }
-  renderAdminProducts();
-}
-
-function showAddProduct() {
-  editingProductId = null;
-  document.getElementById('addProductTitle').textContent = 'Add New Product';
-  ['newProdName','newProdDesc','newProdFullDesc','newProdImg','newProdPrice','newProdOrigPrice','newProdWeight','newProdStock','newProdIcon','newProdOrigin','newProdIngredients','newProdCerts','newProdBadge'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  document.getElementById('addProductOverlay').classList.add('active');
-}
-
-function editProduct(id) {
-  const p = products.find(x => x.id===id || x.firestoreId===id);
-  if (!p) return;
-  editingProductId = id;
-  document.getElementById('addProductTitle').textContent = 'Edit Product';
-  document.getElementById('newProdName').value = p.name || '';
-  document.getElementById('newProdDesc').value = p.desc || '';
-  document.getElementById('newProdFullDesc').value = p.fullDesc || '';
-  document.getElementById('newProdImg').value = p.img || '';
-  document.getElementById('newProdPrice').value = p.price || '';
-  document.getElementById('newProdOrigPrice').value = p.origPrice || '';
-  document.getElementById('newProdWeight').value = p.weight || '';
-  document.getElementById('newProdStock').value = p.stock || '';
-  document.getElementById('newProdCat').value = p.cat || 'vegetables';
-  document.getElementById('newProdIcon').value = p.icon || '';
-  document.getElementById('newProdOrigin').value = p.origin || '';
-  document.getElementById('newProdIngredients').value = p.ingredients || '';
-  document.getElementById('newProdCerts').value = (p.certifications||[]).join(', ');
-  document.getElementById('newProdBadge').value = p.badge || '';
-  document.getElementById('addProductOverlay').classList.add('active');
-}
-
-async function saveProduct() {
-  const name = document.getElementById('newProdName')?.value?.trim();
-  const desc = document.getElementById('newProdDesc')?.value?.trim();
-  const fullDesc = document.getElementById('newProdFullDesc')?.value?.trim();
-  const img = document.getElementById('newProdImg')?.value?.trim();
-  const price = parseInt(document.getElementById('newProdPrice')?.value);
-  const origPrice = parseInt(document.getElementById('newProdOrigPrice')?.value) || price;
-  const weight = document.getElementById('newProdWeight')?.value?.trim();
-  const stock = parseInt(document.getElementById('newProdStock')?.value) || 50;
-  const cat = document.getElementById('newProdCat')?.value;
-  const icon = document.getElementById('newProdIcon')?.value?.trim() || '🌿';
-  const origin = document.getElementById('newProdOrigin')?.value?.trim();
-  const ingredients = document.getElementById('newProdIngredients')?.value?.trim();
-  const certsRaw = document.getElementById('newProdCerts')?.value?.trim();
-  const certifications = certsRaw ? certsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
-  const badge = document.getElementById('newProdBadge')?.value?.trim();
-  if (!name||!price) { showToast('⚠️ Name and price required'); return; }
-
-  const productData = { name, desc, fullDesc, img, price, origPrice, weight, stock, cat, icon, origin, ingredients, certifications, badge };
-
-  if (editingProductId) {
-    const p = products.find(x => x.id===editingProductId || x.firestoreId===editingProductId);
-    if (p) Object.assign(p, productData);
-    // Save to Firestore
-    if (window._fb && p?.firestoreId) {
-      const { db, doc, updateDoc } = window._fb;
-      try { await updateDoc(doc(db, 'products', p.firestoreId), productData); } catch(e) { console.warn('Firestore update failed:', e); }
-    }
-    showToast('✅ Product updated!');
-  } else {
-    const newId = Date.now();
-    const newProduct = { id: newId, ...productData };
-    // Save to Firestore
-    if (window._fb) {
-      const { db, collection, addDoc } = window._fb;
-      try {
-        const ref = await addDoc(collection(db, 'products'), { id: newId, ...productData });
-        newProduct.firestoreId = ref.id;
-      } catch(e) { console.warn('Firestore save failed:', e); }
-    }
-    products.push(newProduct);
-    showToast('✅ Product added!');
-  }
-  closeModal('addProductOverlay');
-  renderAdminProducts();
-  renderProducts();
-}
-
-async function deleteProduct(id) {
-  if (!confirm('Delete this product?')) return;
-  const p = products.find(x => x.id===id || x.firestoreId===id);
-  if (p?.firestoreId && window._fb) {
-    const { db, doc, deleteDoc } = window._fb;
-    try { await deleteDoc(doc(db, 'products', p.firestoreId)); } catch(e) { console.warn('Firestore delete failed:', e); }
-  }
-  products = products.filter(x => x.id!==id && x.firestoreId!==id);
-  renderAdminProducts();
-  renderProducts();
-  showToast('✅ Product deleted');
-}
-
-function updateOrderStatus(el) {
-  showToast(`✅ Order status updated to "${el.value}"`);
-}
-
-async function migrateProductsToFirestore() {
-  if (!window._fb) { showToast('⚠️ Firebase not ready'); return; }
-  const btn = document.getElementById('migrateBtn');
-  btn.textContent = 'Migrating…';
-  btn.disabled = true;
-  const { db, collection, addDoc } = window._fb;
-  let added = 0, failed = 0;
-  try {
-    // Skip the getDocs check — just write directly, one by one
-    for (const p of products) {
-      try {
-        const { firestoreId, ...productData } = p;
-        await addDoc(collection(db, 'products'), productData);
-        added++;
-        btn.textContent = `Migrating… ${added}/${products.length}`;
-      } catch(inner) {
-        console.error('Failed on product:', p.name, inner);
-        failed++;
-      }
-    }
-    btn.textContent = '✅ Done';
-    showToast(`✅ Migration complete: ${added} added, ${failed} failed`);
-    setTimeout(() => { btn.textContent = 'Run Migration →'; btn.disabled = false; }, 4000);
-  } catch(e) {
-    btn.textContent = 'Run Migration →';
-    btn.disabled = false;
-    showToast('❌ Migration failed: ' + e.message);
-    console.error('Migration outer error:', e);
-  }
-}
-
-function saveCompanySettings() {
-  companyName = document.getElementById('settingCompanyName')?.value?.trim() || companyName;
-  // Update everywhere
-  document.querySelectorAll('.nav-brand').forEach(el => { el.innerHTML = companyName + '<span>™</span>'; });
-  const fb = document.getElementById('footerBrand');
-  if (fb) fb.innerHTML = companyName + '<span style="color:var(--accent);">™</span>';
-  const fc = document.getElementById('footerCopyright');
-  if (fc) fc.textContent = `© 2025 ${companyName}. All rights reserved.`;
-  document.title = `${companyName} — Pure. Natural. Delivered.`;
-  showToast(`✅ Company name updated to "${companyName}"`);
-}
-
-function changeAdminPassword() {
-  const current = document.getElementById('settingCurrentPass')?.value;
-  const newPass = document.getElementById('settingNewPass')?.value;
-  const confirm = document.getElementById('settingConfirmPass')?.value;
-  if (current !== adminPassword) { showToast('❌ Current password incorrect'); return; }
-  if (!newPass || newPass.length < 6) { showToast('⚠️ Password must be at least 6 characters'); return; }
-  if (newPass !== confirm) { showToast('⚠️ Passwords do not match'); return; }
-  adminPassword = newPass;
-  showToast('✅ Password updated successfully!');
-}
-
-// ============ UTILS ============
-function trackOrder() {
-  const id = document.getElementById('trackOrderId')?.value?.trim();
-  if (!id) { showToast('⚠️ Enter your order ID'); return; }
-  document.getElementById('trackResult').style.display = 'block';
-}
-
-function closeModal(id) {
-  document.getElementById(id).classList.remove('active');
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
-}
-
-function hideNotif() {
-  document.getElementById('notifBanner').classList.remove('show');
-}
-
-function subscribeNewsletter() {
-  const email = document.getElementById('newsletterEmail').value;
-  if (!email) return;
-  showToast('🌿 Subscribed! Welcome to the OrganicRoot family.');
-  document.getElementById('newsletterEmail').value = '';
-}
-
-// Close on backdrop
-document.querySelectorAll('.overlay, .page-overlay').forEach(el => {
-  el.addEventListener('click', function(e) { if (e.target===this) this.classList.remove('active'); });
-});
-
-// Close WA popup on outside click
-document.addEventListener('click', e => {
-  const waFloat = document.getElementById('waFloat');
-  if (waFloat && !waFloat.contains(e.target)) document.getElementById('waPopup').classList.remove('open');
-});
-
-// ESC
-document.addEventListener('keydown', e => {
-  if (e.key==='Escape') {
-    document.querySelectorAll('.overlay.active, .page-overlay.active').forEach(el => el.classList.remove('active'));
-    if (document.getElementById('cartSidebar').classList.contains('open')) toggleCart();
-  }
-});
-
-// Init — load products from Firestore first, then render
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => setTimeout(initStorefront, 300));
-} else {
-  setTimeout(initStorefront, 300);
+function renderFakeTracking(orderId) {
+  return `<div class="card-block"><p style="text-align:center;color:var(--text-muted);padding:24px">Connect to Firebase to enable real order tracking. Order ID: <strong>${orderId}</strong></p></div>`;
 }
 </script>
+
 </body>
 </html>
