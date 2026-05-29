@@ -37,11 +37,11 @@ function showPage(page) {
 
 // ── Render Home ────────────────────────────────────────────
 function renderHome() {
-  const home = document.getElementById('page-home');
-  if (!home) return;
-  // Featured products (first 8)
+  const grid = document.getElementById('home-products');
+  if (!grid) return;
   const featured = window.PRODUCTS.slice(0, 8);
-  document.getElementById('home-products')?.replaceWith(createProductGrid(featured, 'home-products'));
+  grid.innerHTML = '';
+  featured.forEach(p => grid.appendChild(buildProductCard(p)));
 }
 
 // ── Render Shop Page ───────────────────────────────────────
