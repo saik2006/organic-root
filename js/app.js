@@ -423,6 +423,27 @@ function closeCheckout() {
 }
 
 async function saveOrder(orderId) {
+  const orderItems = cart.map(item => {
+    const p = window.PRODUCTS.find(x => x.id === item.id);
+    return { id: item.id, name: p?.name, qty: item.qty, price: p?.price };
+  });
+
+  // ── Send order confirmation email via EmailJS ──
+  try {
+    if (window.emailjs && window.currentUser?.email) {
+      await window.emailjs.send('chemsupply-mail', 'template_uubi254', {
+        to_name: checkoutData.name,
+        order_id: orderId,
+        items: orderItems.map(i => `${i.name} x${i.qty} — ₹${i.price * i.qty}`).join('\n'),
+        total: `₹${cartTotal()}`,
+        email: window.currentUser.email,
+      });
+    }
+  } catch (err) {
+    console.warn('Order confirmation email failed:', err);
+  }
+
+  // ── Save order to Firestore ──
   if (!window._fb || !window.currentUser) return;
   try {
     const { db, collection, addDoc } = window._fb;
@@ -432,10 +453,7 @@ async function saveOrder(orderId) {
       userName: checkoutData.name,
       phone: checkoutData.phone,
       address: checkoutData.address,
-      items: cart.map(item => {
-        const p = window.PRODUCTS.find(x => x.id === item.id);
-        return { id: item.id, name: p?.name, qty: item.qty, price: p?.price };
-      }),
+      items: orderItems,
       total: cartTotal(),
       status: 'confirmed',
       payMethod: checkoutData.payMethod || 'upi',
