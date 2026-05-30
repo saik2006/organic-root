@@ -12,7 +12,6 @@ exports.handler = async function(event) {
       { method: 'GET' }
     );
     const data = await response.json();
-
     if (data.Status === 'Success') {
       return {
         statusCode: 200,
