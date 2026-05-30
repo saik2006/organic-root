@@ -1,91 +1,157 @@
 /* ============================================================
-   ORGANICROOT — Firebase Auth Module
-   - Firebase Auth for all user sign in/up/out
-   - NO hardcoded passwords anywhere
-   - Admin access via Firebase Auth + Firestore role check
+   ORGANICROOT — Firebase Auth + OTP Module
+   - Email/Password auth via Firebase
+   - Phone OTP via 2Factor.in + Netlify functions
    ============================================================ */
 
-// Firebase config (exposed client-side - normal for Firebase apps)
-// Security comes from Firestore Security Rules, not hiding the config
-const firebaseConfig = {
-  apiKey: "AIzaSyA4FxrwM8yK2W0QePjfMUrCclcGI6023W8",
-  authDomain: "organicroot-3c2d5.firebaseapp.com",
-  projectId: "organicroot-3c2d5",
-  storageBucket: "organicroot-3c2d5.firebasestorage.app",
-  messagingSenderId: "203213074206",
-  appId: "1:203213074206:web:8dcb5dcacecc1771dea30f"
-};
-
-// Auth state handler (called after Firebase loads via module in HTML)
-// This file provides the auth UI logic
+// ── Wait for Firebase to be ready ─────────────────────────
+function waitForFb(callback, attempts = 0) {
+  if (window._fb) { callback(); return; }
+  if (attempts > 20) { console.warn('Firebase never loaded'); return; }
+  setTimeout(() => waitForFb(callback, attempts + 1), 200);
+}
 
 // ── Sign In ────────────────────────────────────────────────
 async function signIn(email, password) {
-  if (!window._fb) { showToast('Auth not ready, try again', 'error'); return; }
-  const { auth, signInWithEmailAndPassword } = window._fb;
-  try {
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    closeModal('modal-auth');
-    showToast(`Welcome back, ${cred.user.displayName || 'there'}! 🌿`, 'success');
-    renderAccountPage();
-  } catch (err) {
-    let msg = 'Sign in failed. Check your email and password.';
-    if (err.code === 'auth/user-not-found') msg = 'No account with that email.';
-    if (err.code === 'auth/wrong-password') msg = 'Incorrect password.';
-    if (err.code === 'auth/invalid-credential') msg = 'Email or password is incorrect.';
-    if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
-    showToast(msg, 'error');
-  }
+  waitForFb(async () => {
+    const { auth, signInWithEmailAndPassword } = window._fb;
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      closeModal('modal-auth');
+      showToast(`Welcome back, ${cred.user.displayName || 'there'}! 🌿`, 'success');
+      if (typeof renderAccountPage === 'function') renderAccountPage();
+    } catch (err) {
+      let msg = 'Sign in failed. Check your email and password.';
+      if (err.code === 'auth/user-not-found') msg = 'No account with that email.';
+      if (err.code === 'auth/wrong-password') msg = 'Incorrect password.';
+      if (err.code === 'auth/invalid-credential') msg = 'Email or password is incorrect.';
+      if (err.code === 'auth/too-many-requests') msg = 'Too many attempts. Try again later.';
+      if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your connection.';
+      showToast(msg, 'error');
+    }
+  });
 }
 
 // ── Sign Up ────────────────────────────────────────────────
 async function signUp(name, email, password) {
-  if (!window._fb) { showToast('Auth not ready, try again', 'error'); return; }
-  const { auth, db, createUserWithEmailAndPassword, updateProfile, doc, setDoc } = window._fb;
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(cred.user, { displayName: name });
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      name,
-      email,
-      role: 'customer',
-      createdAt: new Date().toISOString(),
-    });
-    closeModal('modal-auth');
-    showToast(`Welcome to OrganicRoot, ${name}! 🌿`, 'success');
-  } catch (err) {
-    let msg = 'Sign up failed. Please try again.';
-    if (err.code === 'auth/email-already-in-use') msg = 'An account with this email already exists.';
-    if (err.code === 'auth/weak-password') msg = 'Password must be at least 6 characters.';
-    if (err.code === 'auth/invalid-email') msg = 'Please enter a valid email address.';
-    showToast(msg, 'error');
-  }
+  waitForFb(async () => {
+    const { auth, db, createUserWithEmailAndPassword, updateProfile, doc, setDoc } = window._fb;
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName: name });
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        name,
+        email,
+        role: 'customer',
+        createdAt: new Date().toISOString(),
+      });
+      closeModal('modal-auth');
+      showToast(`Welcome to OrganicRoot, ${name}! 🌿`, 'success');
+    } catch (err) {
+      let msg = 'Sign up failed. Please try again.';
+      if (err.code === 'auth/email-already-in-use') msg = 'An account with this email already exists.';
+      if (err.code === 'auth/weak-password') msg = 'Password must be at least 6 characters.';
+      if (err.code === 'auth/invalid-email') msg = 'Please enter a valid email address.';
+      if (err.code === 'auth/network-request-failed') msg = 'Network error. Check your connection.';
+      showToast(msg, 'error');
+    }
+  });
 }
 
 // ── Sign Out ───────────────────────────────────────────────
 async function signOut() {
   if (!window._fb) return;
-  await window._fb.signOut(window._fb.auth);
+  await window._fb.signOut();
+  window.currentUser = null;
   showToast('Signed out. See you soon!', '');
   showPage('home');
 }
 
 // ── Password Reset ─────────────────────────────────────────
 async function sendPasswordReset(email) {
-  if (!window._fb) return;
-  const { auth, sendPasswordResetEmail } = window._fb;
+  waitForFb(async () => {
+    const { auth, sendPasswordResetEmail } = window._fb;
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showToast('Password reset email sent. Check your inbox.', 'success');
+      closeModal('modal-auth');
+    } catch (err) {
+      showToast('Could not send reset email. Check the address.', 'error');
+    }
+  });
+}
+
+// ── OTP: Send ──────────────────────────────────────────────
+let otpSessionId = null;
+
+async function sendOTP(phone) {
+  // Ensure phone has country code
+  const formatted = phone.startsWith('+') ? phone : '+91' + phone.replace(/^0/, '');
+  const btn = document.getElementById('otp-send-btn');
+  if (btn) { btn.textContent = 'Sending…'; btn.disabled = true; }
+
   try {
-    await sendPasswordResetEmail(auth, email);
-    showToast('Password reset email sent. Check your inbox.', 'success');
-    closeModal('modal-auth');
+    const res = await fetch('/.netlify/functions/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: formatted.replace('+', '') })
+    });
+    const data = await res.json();
+    if (data.success) {
+      otpSessionId = data.sessionId;
+      // Show OTP input field
+      document.getElementById('otp-step-1').style.display = 'none';
+      document.getElementById('otp-step-2').style.display = 'block';
+      showToast('OTP sent to ' + formatted, 'success');
+    } else {
+      showToast('Failed to send OTP. Check the number.', 'error');
+    }
   } catch (err) {
-    showToast('Could not send reset email. Check the address.', 'error');
+    showToast('OTP service error. Try again.', 'error');
   }
+
+  if (btn) { btn.textContent = 'Send OTP'; btn.disabled = false; }
+}
+
+// ── OTP: Verify ────────────────────────────────────────────
+async function verifyOTP(otp) {
+  if (!otpSessionId) { showToast('Session expired. Resend OTP.', 'error'); return; }
+  const btn = document.getElementById('otp-verify-btn');
+  if (btn) { btn.textContent = 'Verifying…'; btn.disabled = true; }
+
+  try {
+    const res = await fetch('/.netlify/functions/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: otpSessionId, otp })
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Sign in anonymously with Firebase after OTP verified
+      // then update display name
+      waitForFb(async () => {
+        const { auth } = window._fb;
+        const { signInAnonymously, updateProfile } = await import(
+          'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'
+        );
+        const name = document.getElementById('otp-name')?.value || 'Customer';
+        const cred = await signInAnonymously(auth);
+        await updateProfile(cred.user, { displayName: name });
+        window.currentUser = cred.user;
+        closeModal('modal-auth');
+        showToast(`Welcome, ${name}! 🌿`, 'success');
+      });
+    } else {
+      showToast('Incorrect OTP. Try again.', 'error');
+    }
+  } catch (err) {
+    showToast('Verification failed. Try again.', 'error');
+  }
+
+  if (btn) { btn.textContent = 'Verify OTP'; btn.disabled = false; }
 }
 
 // ── Admin Role Check ───────────────────────────────────────
-// Admin access is determined by a 'role: admin' field in Firestore
-// NOT by a hardcoded password
 async function checkAdminRole(uid) {
   if (!window._fb) return false;
   try {
@@ -99,7 +165,8 @@ async function checkAdminRole(uid) {
 
 // ── Setup Auth Form UI ─────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Sign In form submit
+
+  // Sign In
   document.getElementById('signin-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('si-email').value.trim();
@@ -110,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.textContent = 'Sign In'; btn.disabled = false;
   });
 
-  // Sign Up form submit
+  // Sign Up
   document.getElementById('signup-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('su-name').value.trim();
@@ -123,36 +190,66 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.textContent = 'Create Account'; btn.disabled = false;
   });
 
-  // Forgot password form
+  // Forgot password
   document.getElementById('forgot-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('fp-email').value.trim();
     await sendPasswordReset(email);
   });
 
-  // Tab toggles inside auth modal
+  // OTP send
+  document.getElementById('otp-send-btn')?.addEventListener('click', () => {
+    const phone = document.getElementById('otp-phone').value.trim();
+    if (!phone || phone.length < 10) { showToast('Enter a valid 10-digit number', 'error'); return; }
+    sendOTP(phone);
+  });
+
+  // OTP verify
+  document.getElementById('otp-verify-btn')?.addEventListener('click', () => {
+    const otp = document.getElementById('otp-code').value.trim();
+    if (!otp || otp.length !== 6) { showToast('Enter the 6-digit OTP', 'error'); return; }
+    verifyOTP(otp);
+  });
+
+  // OTP resend
+  document.getElementById('otp-resend-btn')?.addEventListener('click', () => {
+    const phone = document.getElementById('otp-phone').value.trim();
+    sendOTP(phone);
+  });
+
+  // Tab toggles
   document.getElementById('switch-to-signup')?.addEventListener('click', () => {
     document.getElementById('auth-form-signin').style.display = 'none';
     document.getElementById('auth-form-signup').style.display = 'block';
     document.getElementById('auth-form-forgot').style.display = 'none';
+    document.getElementById('auth-form-otp').style.display = 'none';
   });
   document.getElementById('switch-to-signin')?.addEventListener('click', () => {
     document.getElementById('auth-form-signin').style.display = 'block';
     document.getElementById('auth-form-signup').style.display = 'none';
     document.getElementById('auth-form-forgot').style.display = 'none';
+    document.getElementById('auth-form-otp').style.display = 'none';
   });
   document.getElementById('switch-to-forgot')?.addEventListener('click', () => {
     document.getElementById('auth-form-signin').style.display = 'none';
     document.getElementById('auth-form-signup').style.display = 'none';
     document.getElementById('auth-form-forgot').style.display = 'block';
+    document.getElementById('auth-form-otp').style.display = 'none';
+  });
+  document.getElementById('switch-to-otp')?.addEventListener('click', () => {
+    document.getElementById('auth-form-signin').style.display = 'none';
+    document.getElementById('auth-form-signup').style.display = 'none';
+    document.getElementById('auth-form-forgot').style.display = 'none';
+    document.getElementById('auth-form-otp').style.display = 'block';
   });
 
-  // Sign out button
+  // Sign out
   document.getElementById('btn-signout')?.addEventListener('click', signOut);
 });
 
-// Expose
 window.signIn = signIn;
 window.signUp = signUp;
 window.signOut = signOut;
+window.sendOTP = sendOTP;
+window.verifyOTP = verifyOTP;
 window.checkAdminRole = checkAdminRole;
