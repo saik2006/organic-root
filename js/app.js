@@ -11,12 +11,15 @@ let currentCategory = 'all';
 let searchQuery = '';
 
 // ── DOM Ready ──────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   renderNav();
   renderHome();
   updateCartBadge();
   setupEventListeners();
-});
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
+window.initApp = initApp;
 
 // ── Page Router ────────────────────────────────────────────
 function showPage(page) {
