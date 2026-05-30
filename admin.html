@@ -952,20 +952,51 @@
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
-      // Verify admin
-      try {
-        const snap = await getDoc(doc(db, 'users', user.uid));
-        if (snap.exists() && snap.data().role === 'admin') {
-          document.getElementById('login-screen').style.display = 'none';
-          document.getElementById('sidebar').style.display = 'flex';
-          document.getElementById('main-content').style.display = 'block';
-          initAdmin();
-        } else {
-          await signOut(auth);
+      // Verify admin with retry
+      async function verifyAdmin(attempt = 0) {
+        try {
+          const snap = await getDoc(doc(db, 'users', user.uid));
+          if (snap.exists() && snap.data().role === 'admin') {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('sidebar').style.display = 'flex';
+            document.getElementById('main-content').style.display = 'block';
+            initAdmin();
+          } else {
+            await signOut(auth);
+            document.getElementById('login-err').textContent = 'Access denied. Admin accounts only.';
+            document.getElementById('login-err').style.display = 'block';
+          }
+        } catch(e) {
+          if (attempt < 5) {
+            // Retry up to 5 times with increasing delay
+            setTimeout(() => verifyAdmin(attempt + 1), 1000 * (attempt + 1));
+          } else {
+            // Last resort: check via REST API
+            try {
+              const token = await user.getIdToken();
+              const res = await fetch(
+                `https://firestore.googleapis.com/v1/projects/organicroot-3c2d5/databases/(default)/documents/users/${user.uid}`,
+                { headers: { 'Authorization': `Bearer ${token}` } }
+              );
+              const data = await res.json();
+              const role = data.fields?.role?.stringValue;
+              if (role === 'admin') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('main-content').style.display = 'block';
+                initAdmin();
+              } else {
+                await signOut(auth);
+              }
+            } catch(e2) {
+              document.getElementById('login-err').textContent = 'Connection error. Please refresh and try again.';
+              document.getElementById('login-err').style.display = 'block';
+              await signOut(auth);
+            }
+          }
         }
-      } catch(e) {
-        console.warn(e);
       }
+      verifyAdmin();
     } else {
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('sidebar').style.display = 'none';
