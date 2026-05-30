@@ -663,5 +663,15 @@ function renderFakeTracking(orderId) {
 }
 </script>
 
+<script>
+// Fallback init — ensures products render even if DOMContentLoaded already fired
+// (can happen due to module script timing with Firebase)
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  setTimeout(() => {
+    if (typeof initApp === 'function') initApp();
+  }, 0);
+}
+</script>
+
 </body>
 </html>
