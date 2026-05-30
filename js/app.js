@@ -436,6 +436,7 @@ async function saveOrder(orderId) {
         order_id: orderId,
         items: orderItems.map(i => `${i.name} x${i.qty} — ₹${i.price * i.qty}`).join('\n'),
         total: `₹${cartTotal()}`,
+        to_email: window.currentUser.email,
         email: window.currentUser.email,
       });
     }
