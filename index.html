@@ -10,49 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
     onload="emailjs.init('K9WAZIo8h0W0ijTYe')"
     onerror="console.warn('EmailJS not loaded')"></script>
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-      signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore, doc, setDoc, getDoc, updateDoc,
-      collection, addDoc, getDocs, query, where, orderBy, deleteDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyA4FxrwM8yK2W0QePjfMUrCclcGI6023W8",
-      authDomain: "organicroot-3c2d5.firebaseapp.com",
-      projectId: "organicroot-3c2d5",
-      storageBucket: "organicroot-3c2d5.firebasestorage.app",
-      messagingSenderId: "203213074206",
-      appId: "1:203213074206:web:8dcb5dcacecc1771dea30f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    window._fb = {
-      auth, db,
-      createUserWithEmailAndPassword, signInWithEmailAndPassword,
-      signOut: () => signOut(auth),
-      onAuthStateChanged, sendPasswordResetEmail, updateProfile,
-      doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, query, where, orderBy, deleteDoc
-    };
-
-    onAuthStateChanged(auth, (user) => {
-      window.currentUser = user;
-      const btn = document.getElementById('nav-account-btn');
-      if (btn) {
-        btn.textContent = user ? '👤 ' + (user.displayName?.split(' ')[0] || 'Account') : '👤 Sign In';
-        btn.onclick = user ? () => showPage('account') : openSignIn;
-      }
-      if (window.currentPage === 'account') renderAccountPage();
-    });
-  </script>
+  <!-- Firebase loaded after page renders -->
 </head>
 <body>
 
@@ -663,14 +621,48 @@ function renderFakeTracking(orderId) {
 }
 </script>
 
-<script>
-// Fallback init — ensures products render even if DOMContentLoaded already fired
-// (can happen due to module script timing with Firebase)
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  setTimeout(() => {
-    if (typeof initApp === 'function') initApp();
-  }, 0);
-}
+<!-- Firebase loads AFTER page content, so it never blocks rendering -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore, doc, setDoc, getDoc, updateDoc,
+    collection, addDoc, getDocs, query, where, orderBy, deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA4FxrwM8yK2W0QePjfMUrCclcGI6023W8",
+    authDomain: "organicroot-3c2d5.firebaseapp.com",
+    projectId: "organicroot-3c2d5",
+    storageBucket: "organicroot-3c2d5.firebasestorage.app",
+    messagingSenderId: "203213074206",
+    appId: "1:203213074206:web:8dcb5dcacecc1771dea30f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  window._fb = {
+    auth, db,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    signOut: () => signOut(auth),
+    onAuthStateChanged, sendPasswordResetEmail, updateProfile,
+    doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, query, where, orderBy, deleteDoc
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    window.currentUser = user;
+    const btn = document.getElementById('nav-account-btn');
+    if (btn) {
+      btn.textContent = user ? '👤 ' + (user.displayName?.split(' ')[0] || 'Account') : '👤 Sign In';
+      btn.onclick = user ? () => window.showPage('account') : window.openSignIn;
+    }
+    if (window.currentPage === 'account') window.renderAccountPage?.();
+  });
 </script>
 
 </body>
