@@ -428,16 +428,19 @@ async function saveOrder(orderId) {
     return { id: item.id, name: p?.name, qty: item.qty, price: p?.price };
   });
 
-  // ── Send order confirmation email via EmailJS ──
+  // ── Send order confirmation email via Resend (Netlify function) ──
   try {
-    if (window.emailjs && window.currentUser?.email) {
-      await window.emailjs.send('chemsupply-mail', 'template_uubi254', {
-        to_name: checkoutData.name,
-        order_id: orderId,
-        items: orderItems.map(i => `${i.name} x${i.qty} — ₹${i.price * i.qty}`).join('\n'),
-        total: `₹${cartTotal()}`,
-        to_email: window.currentUser.email,
-        email: window.currentUser.email,
+    if (window.currentUser?.email) {
+      await fetch('/.netlify/functions/send-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to_name: checkoutData.name,
+          to_email: window.currentUser.email,
+          order_id: orderId,
+          items: orderItems.map(i => `${i.name} x${i.qty} — ₹${i.price * i.qty}`).join('\n'),
+          total: `₹${cartTotal()}`,
+        }),
       });
     }
   } catch (err) {
