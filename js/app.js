@@ -805,7 +805,7 @@ async function subscribeNewsletter() {
       body: JSON.stringify({ email }),
     });
 
-    showToast('🌿 You're subscribed! Welcome aboard.', 'success');
+    showToast('🌿 Subscribed! Welcome aboard.', 'success');
     emailInput.value = '';
   } catch (err) {
     showToast('Something went wrong. Please try again.', 'error');
