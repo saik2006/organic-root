@@ -75,12 +75,13 @@ function createProductGrid(products, id) {
 
 function buildProductCard(product) {
   const inCart = cart.find(i => i.id === product.id);
+  const outOfStock = product.available === false;
   const card = document.createElement('div');
   card.className = 'product-card';
   card.innerHTML = `
-    <div class="product-img">
+    <div class="product-img" style="${outOfStock ? 'opacity:0.6;filter:grayscale(0.4)' : ''}">
       <span>${product.emoji}</span>
-      ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ''}
+      ${outOfStock ? '<div class="product-badge" style="background:var(--bark)">Out of Stock</div>' : (product.badge ? `<div class="product-badge">${product.badge}</div>` : '')}
       <div class="product-unit">${product.unit}</div>
     </div>
     <div class="product-info">
@@ -88,17 +89,20 @@ function buildProductCard(product) {
       <p class="product-desc">${product.desc}</p>
       <div class="product-footer">
         <div class="product-price">₹${product.price} <s>₹${product.originalPrice}</s></div>
-        <button class="btn-add ${inCart ? 'in-cart' : ''}" data-id="${product.id}">
-          ${inCart ? '✓ Added' : '+ Add'}
+        <button class="btn-add ${outOfStock ? 'in-cart' : inCart ? 'in-cart' : ''}" 
+          data-id="${product.id}" ${outOfStock ? 'disabled style="cursor:not-allowed;opacity:0.6"' : ''}>
+          ${outOfStock ? 'Out of Stock' : inCart ? '✓ Added' : '+ Add'}
         </button>
       </div>
     </div>
   `;
-  card.querySelector('.btn-add').addEventListener('click', (e) => {
-    addToCart(product.id);
-    e.target.textContent = '✓ Added';
-    e.target.classList.add('in-cart');
-  });
+  if (!outOfStock) {
+    card.querySelector('.btn-add').addEventListener('click', (e) => {
+      addToCart(product.id);
+      e.target.textContent = '✓ Added';
+      e.target.classList.add('in-cart');
+    });
+  }
   return card;
 }
 
@@ -235,6 +239,33 @@ function closeModal(id) {
 // ── Checkout Flow ──────────────────────────────────────────
 let checkoutStep = 1;
 let checkoutData = {};
+let appliedCoupon = null;
+
+// Coupon codes — add more in admin panel later
+const COUPONS = {
+  'ORGANIC10': { type: 'percent', value: 10, desc: '10% off your order' },
+  'WELCOME20': { type: 'percent', value: 20, desc: '20% off your order' },
+};
+
+function discountedTotal() {
+  const base = cartTotal();
+  if (!appliedCoupon) return base;
+  if (appliedCoupon.type === 'percent') return Math.round(base * (1 - appliedCoupon.value / 100));
+  return Math.max(0, base - appliedCoupon.value);
+}
+
+function applyCoupon(code) {
+  const coupon = COUPONS[code.toUpperCase()];
+  if (!coupon) { showToast('Invalid coupon code', 'error'); return; }
+  appliedCoupon = { ...coupon, code: code.toUpperCase() };
+  showToast(`✓ Coupon applied — ${coupon.desc}`, 'success');
+  renderCheckoutStep();
+}
+
+function removeCoupon() {
+  appliedCoupon = null;
+  renderCheckoutStep();
+}
 
 function openCheckout() {
   if (cart.length === 0) { showToast('Your cart is empty', 'error'); return; }
@@ -262,7 +293,25 @@ function renderCheckoutStep() {
           return p ? `<div class="recap-item"><span>${p.emoji} ${p.name} ×${item.qty}</span><strong>₹${p.price * item.qty}</strong></div>` : '';
         }).join('')}
         <hr class="recap-divider">
-        <div class="recap-total"><span>Total</span><span>₹${cartTotal()}</span></div>
+        ${appliedCoupon ? `
+          <div class="recap-item"><span>Subtotal</span><strong>₹${cartTotal()}</strong></div>
+          <div class="recap-item" style="color:var(--olive)"><span>🎟 ${appliedCoupon.code} (${appliedCoupon.desc})</span><strong>−₹${cartTotal() - discountedTotal()}</strong></div>
+          <hr class="recap-divider">` : ''}
+        <div class="recap-total"><span>Total</span><span>₹${discountedTotal()}</span></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:18px;align-items:center">
+        ${appliedCoupon ? `
+          <div style="flex:1;background:var(--olive-pale);border:1.5px solid var(--olive);border-radius:11px;padding:11px 16px;font-size:13.5px;font-weight:600;color:var(--olive)">
+            🎟 ${appliedCoupon.code} applied
+          </div>
+          <button onclick="removeCoupon()" style="background:none;border:1.5px solid var(--border);border-radius:11px;padding:11px 14px;cursor:pointer;font-size:13px;color:var(--text-muted);font-family:'DM Sans',sans-serif">Remove</button>
+        ` : `
+          <input type="text" id="coupon-input" placeholder="Have a coupon code?" 
+            style="flex:1;padding:11px 16px;border:2px solid var(--border);border-radius:11px;font-size:13.5px;font-family:'DM Sans',sans-serif;outline:none;background:var(--cream);text-transform:uppercase"
+            onfocus="this.style.borderColor='var(--olive)'" onblur="this.style.borderColor='var(--border)'">
+          <button onclick="applyCoupon(document.getElementById('coupon-input').value)" 
+            style="background:var(--olive);color:#fff;border:none;border-radius:11px;padding:11px 18px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">Apply</button>
+        `}
       </div>
       <div class="form-group">
         <label>Full Name</label>
@@ -293,7 +342,8 @@ function renderCheckoutStep() {
       const phone = document.getElementById('co-phone').value.trim();
       const address = document.getElementById('co-address').value.trim();
       if (!name || !phone || !address) { showToast('Please fill in all fields', 'error'); return; }
-      checkoutData = { ...checkoutData, name, phone, address };
+      const deliverySlot = document.getElementById('co-time').value.includes('Morning') ? 'morning' : document.getElementById('co-time').value.includes('Afternoon') ? 'afternoon' : 'evening';
+      checkoutData = { ...checkoutData, name, phone, address, deliverySlot };
       checkoutStep = 2;
       renderCheckoutStep();
     };
@@ -303,8 +353,9 @@ function renderCheckoutStep() {
       <div class="order-recap">
         <div class="recap-item"><span>Delivering to</span><strong>${checkoutData.name}</strong></div>
         <div class="recap-item"><span>Address</span><strong style="max-width:200px;text-align:right">${checkoutData.address}</strong></div>
+        ${appliedCoupon ? `<div class="recap-item" style="color:var(--olive)"><span>🎟 ${appliedCoupon.code}</span><strong>−₹${cartTotal() - discountedTotal()}</strong></div>` : ''}
         <hr class="recap-divider">
-        <div class="recap-total"><span>Total</span><span>₹${cartTotal()}</span></div>
+        <div class="recap-total"><span>Total</span><span>₹${discountedTotal()}</span></div>
       </div>
       <p style="font-size:13.5px;color:var(--text-muted);margin-bottom:16px;font-weight:600">Select Payment Method</p>
       <div class="pay-grid">
@@ -328,7 +379,7 @@ function renderCheckoutStep() {
       </div>
       <div class="checkout-nav">
         <button class="btn-back" id="co-back-2">← Back</button>
-        <button class="btn-pay" id="co-pay">Pay ₹${cartTotal()}</button>
+        <button class="btn-pay" id="co-pay">Pay ₹${discountedTotal()}</button>
       </div>`;
 
     // Payment method toggle
@@ -420,6 +471,7 @@ function closeCheckout() {
   document.getElementById('checkout-wrapper').classList.remove('active');
   checkoutStep = 1;
   checkoutData = {};
+  appliedCoupon = null;
 }
 
 async function saveOrder(orderId) {
@@ -439,7 +491,7 @@ async function saveOrder(orderId) {
           to_email: window.currentUser.email,
           order_id: orderId,
           items: orderItems.map(i => `${i.name} x${i.qty} — ₹${i.price * i.qty}`).join('\n'),
-          total: `₹${cartTotal()}`,
+          total: `₹${discountedTotal()}`,
         }),
       });
     }
@@ -458,9 +510,12 @@ async function saveOrder(orderId) {
       phone: checkoutData.phone,
       address: checkoutData.address,
       items: orderItems,
-      total: cartTotal(),
+      total: discountedTotal(),
+      discount: cartTotal() - discountedTotal(),
+      coupon: appliedCoupon?.code || null,
       status: 'confirmed',
       payMethod: checkoutData.payMethod || 'upi',
+      deliverySlot: checkoutData.deliverySlot || 'morning',
       createdAt: new Date().toISOString(),
     });
   } catch (err) {
@@ -484,30 +539,72 @@ function renderAccountPage() {
 
 async function loadUserOrders() {
   const container = document.getElementById('orders-list');
-  if (!container || !window._fb || !window.currentUser) return;
+  if (!container || !window.currentUser) return;
+
+  container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted)"><div style="width:36px;height:36px;border:3px solid var(--olive-pale);border-top-color:var(--olive);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px"></div><p style="font-size:13px">Loading orders…</p></div>`;
+
+  // Try Firestore SDK first, fall back to REST API
   try {
-    const { db, collection, getDocs, query, where, orderBy } = window._fb;
-    const q = query(collection(db, 'orders'), where('userId', '==', window.currentUser.uid));
-    const snap = await getDocs(q);
-    if (snap.empty) {
-      container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)"><p>No orders yet. <button class="link-btn" onclick="showPage('shop')">Start shopping</button></p></div>`;
-      return;
+    let orders = [];
+
+    if (window._fb) {
+      const { db, collection, getDocs, query, where } = window._fb;
+      const q = query(collection(db, 'orders'), where('userId', '==', window.currentUser.uid));
+      const snap = await getDocs(q);
+      snap.forEach(doc => orders.push(doc.data()));
+    } else {
+      throw new Error('Firebase SDK not ready');
     }
-    const orders = [];
-    snap.forEach(doc => orders.push(doc.data()));
-    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    container.innerHTML = orders.map(order => `
-      <div class="order-card">
-        <div class="order-card-head">
-          <div class="order-id">#${order.orderId}</div>
-          <div class="order-status status-${order.status === 'delivered' ? 'delivered' : order.status === 'transit' ? 'transit' : 'processing'}">${order.status}</div>
-        </div>
-        <div class="order-items-list">${order.items.map(i => `${i.name} ×${i.qty}`).join(', ')}</div>
-        <div class="order-total-sm">₹${order.total}</div>
-      </div>`).join('');
+
+    renderUserOrders(orders, container);
   } catch (err) {
-    container.innerHTML = `<p style="color:var(--text-muted);font-size:14px">Couldn't load orders right now.</p>`;
+    // Fallback: REST API
+    try {
+      const token = await window.currentUser.getIdToken();
+      const res = await fetch(
+        `https://firestore.googleapis.com/v1/projects/organicroot-3c2d5/databases/(default)/documents/orders?pageSize=50`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      const orders = (data.documents || [])
+        .map(d => {
+          const f = d.fields || {};
+          return {
+            orderId: f.orderId?.stringValue,
+            userId: f.userId?.stringValue,
+            status: f.status?.stringValue,
+            total: f.total?.integerValue || f.total?.doubleValue,
+            createdAt: f.createdAt?.stringValue,
+            items: (f.items?.arrayValue?.values || []).map(v => ({
+              name: v.mapValue?.fields?.name?.stringValue,
+              qty: v.mapValue?.fields?.qty?.integerValue,
+            })),
+          };
+        })
+        .filter(o => o.userId === window.currentUser.uid);
+
+      renderUserOrders(orders, container);
+    } catch (e2) {
+      container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)"><p>Couldn't load orders right now. Please try again.</p></div>`;
+    }
   }
+}
+
+function renderUserOrders(orders, container) {
+  if (!orders.length) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)"><div style="font-size:40px;margin-bottom:12px">📦</div><p>No orders yet. <button class="link-btn" onclick="showPage('shop')">Start shopping</button></p></div>`;
+    return;
+  }
+  orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  container.innerHTML = orders.map(order => `
+    <div class="order-card">
+      <div class="order-card-head">
+        <div class="order-id">#${order.orderId}</div>
+        <div class="order-status status-${order.status === 'delivered' ? 'delivered' : order.status === 'transit' ? 'transit' : 'processing'}">${order.status}</div>
+      </div>
+      <div class="order-items-list">${(order.items||[]).map(i => `${i.name} ×${i.qty}`).join(', ')}</div>
+      <div class="order-total-sm">₹${order.total}</div>
+    </div>`).join('');
 }
 
 // ── Blog Page ──────────────────────────────────────────────
@@ -607,11 +704,61 @@ function setupEventListeners() {
     });
   });
 
-  // Shop search
-  document.getElementById('shop-search')?.addEventListener('input', (e) => {
+  // Shop search with suggestions
+  const shopSearch = document.getElementById('shop-search');
+  const suggestionsBox = document.getElementById('search-suggestions');
+
+  shopSearch?.addEventListener('input', (e) => {
     searchQuery = e.target.value;
     renderShopPage();
+    showSearchSuggestions(e.target.value);
   });
+
+  shopSearch?.addEventListener('blur', () => {
+    setTimeout(() => {
+      if (suggestionsBox) suggestionsBox.style.display = 'none';
+    }, 200);
+  });
+
+  shopSearch?.addEventListener('focus', (e) => {
+    if (e.target.value) showSearchSuggestions(e.target.value);
+  });
+
+function showSearchSuggestions(query) {
+  const box = document.getElementById('search-suggestions');
+  if (!box) return;
+  if (!query || query.length < 2) { box.style.display = 'none'; return; }
+
+  const matches = window.PRODUCTS.filter(p =>
+    p.name.toLowerCase().includes(query.toLowerCase()) ||
+    p.category.toLowerCase().includes(query.toLowerCase())
+  ).slice(0, 6);
+
+  if (!matches.length) { box.style.display = 'none'; return; }
+
+  box.innerHTML = matches.map(p => `
+    <div class="suggestion-item" data-id="${p.id}">
+      <span style="font-size:20px">${p.emoji}</span>
+      <div>
+        <div style="font-size:13.5px;font-weight:600;color:var(--clay)">${p.name}</div>
+        <div style="font-size:11.5px;color:var(--text-muted);text-transform:capitalize">${p.category} · ₹${p.price}</div>
+      </div>
+    </div>`).join('');
+
+  box.style.display = 'block';
+
+  box.querySelectorAll('.suggestion-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const product = window.PRODUCTS.find(p => p.id === item.dataset.id);
+      if (product) {
+        shopSearch.value = product.name;
+        searchQuery = product.name;
+        box.style.display = 'none';
+        renderShopPage();
+      }
+    });
+  });
+}
 
   // Account panel nav
   document.querySelectorAll('.acc-nav-item').forEach(item => {
@@ -626,6 +773,45 @@ function setupEventListeners() {
 
   // Contact form
   setupContactForm();
+}
+
+// ── Newsletter Subscribe ──────────────────────────────────
+async function subscribeNewsletter() {
+  const emailInput = document.getElementById('newsletter-email');
+  const btn = document.getElementById('newsletter-btn');
+  const email = emailInput.value.trim();
+
+  if (!email || !email.includes('@')) {
+    showToast('Please enter a valid email address', 'error');
+    return;
+  }
+
+  btn.textContent = 'Subscribing…'; btn.disabled = true;
+
+  try {
+    // Save to Firestore
+    if (window._fb) {
+      const { db, collection, addDoc } = window._fb;
+      await addDoc(collection(db, 'newsletter'), {
+        email,
+        subscribedAt: new Date().toISOString(),
+      });
+    }
+
+    // Send notification email via Netlify function
+    await fetch('/.netlify/functions/send-newsletter-notif', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    showToast('🌿 You're subscribed! Welcome aboard.', 'success');
+    emailInput.value = '';
+  } catch (err) {
+    showToast('Something went wrong. Please try again.', 'error');
+  }
+
+  btn.textContent = 'Subscribe'; btn.disabled = false;
 }
 
 // Expose globals needed by HTML onclick attributes
