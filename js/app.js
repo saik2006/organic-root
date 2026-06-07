@@ -802,11 +802,15 @@ async function subscribeNewsletter() {
 
     // Send notification email via Netlify function
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
       await fetch('/.netlify/functions/send-newsletter-notif', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
     } catch(e) { console.warn('Newsletter notif failed:', e); }
 
     showToast('🌿 Subscribed! Welcome aboard.', 'success');
