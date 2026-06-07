@@ -462,9 +462,73 @@ function updateStepTrack() {
   });
 }
 
-function processPayment() {
-  checkoutStep = 3;
-  renderCheckoutStep();
+async function processPayment() {
+  const payMethod = checkoutData.payMethod || 'upi';
+
+  // Cash on delivery — skip Razorpay
+  if (payMethod === 'cod') {
+    checkoutStep = 3;
+    renderCheckoutStep();
+    return;
+  }
+
+  // All other payments go through Razorpay
+  const btn = document.getElementById('co-pay');
+  if (btn) { btn.textContent = 'Opening payment…'; btn.disabled = true; }
+
+  try {
+    // Create Razorpay order via Netlify function
+    const res = await fetch('/.netlify/functions/razorpay-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: discountedTotal(),
+        currency: 'INR',
+        receipt: 'OR' + Date.now().toString().slice(-8),
+      }),
+    });
+
+    const data = await res.json();
+    if (!data.success) throw new Error('Order creation failed');
+
+    // Open Razorpay checkout
+    const options = {
+      key: 'rzp_test_SyZvVHChjEZ6hO',
+      amount: data.amount,
+      currency: 'INR',
+      name: 'OrganicRoot',
+      description: 'Fresh Organic Groceries',
+      order_id: data.orderId,
+      prefill: {
+        name: checkoutData.name,
+        contact: checkoutData.phone,
+        email: window.currentUser?.email || '',
+      },
+      theme: { color: '#3d2b1f' },
+      handler: function(response) {
+        // Payment successful
+        checkoutStep = 3;
+        renderCheckoutStep();
+      },
+      modal: {
+        ondismiss: function() {
+          if (btn) { btn.textContent = `Pay ₹${discountedTotal()}`; btn.disabled = false; }
+          showToast('Payment cancelled', '');
+        }
+      }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.on('payment.failed', function(response) {
+      showToast('Payment failed. Please try again.', 'error');
+      if (btn) { btn.textContent = `Pay ₹${discountedTotal()}`; btn.disabled = false; }
+    });
+    rzp.open();
+
+  } catch(err) {
+    showToast('Payment setup failed. Try again.', 'error');
+    if (btn) { btn.textContent = `Pay ₹${discountedTotal()}`; btn.disabled = false; }
+  }
 }
 
 function closeCheckout() {
