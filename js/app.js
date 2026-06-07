@@ -791,27 +791,31 @@ async function subscribeNewsletter() {
   try {
     // Save to Firestore
     if (window._fb) {
-      const { db, collection, addDoc } = window._fb;
-      await addDoc(collection(db, 'newsletter'), {
-        email,
-        subscribedAt: new Date().toISOString(),
-      });
+      try {
+        const { db, collection, addDoc } = window._fb;
+        await addDoc(collection(db, 'newsletter'), {
+          email,
+          subscribedAt: new Date().toISOString(),
+        });
+      } catch(e) { console.warn('Firestore save failed:', e); }
     }
 
     // Send notification email via Netlify function
-    await fetch('/.netlify/functions/send-newsletter-notif', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
+    try {
+      await fetch('/.netlify/functions/send-newsletter-notif', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+    } catch(e) { console.warn('Newsletter notif failed:', e); }
 
     showToast('🌿 Subscribed! Welcome aboard.', 'success');
     emailInput.value = '';
   } catch (err) {
     showToast('Something went wrong. Please try again.', 'error');
+  } finally {
+    btn.textContent = 'Subscribe'; btn.disabled = false;
   }
-
-  btn.textContent = 'Subscribe'; btn.disabled = false;
 }
 
 // Expose globals needed by HTML onclick attributes
