@@ -127,19 +127,32 @@ async function verifyOTP(otp) {
     });
     const data = await res.json();
     if (data.success) {
-      // Sign in anonymously with Firebase after OTP verified
-      // then update display name
       waitForFb(async () => {
-        const { auth } = window._fb;
-        const { signInAnonymously, updateProfile } = await import(
-          'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js'
-        );
-        const name = document.getElementById('otp-name')?.value || 'Customer';
-        const cred = await signInAnonymously(auth);
-        await updateProfile(cred.user, { displayName: name });
-        window.currentUser = cred.user;
-        closeModal('modal-auth');
-        showToast(`Welcome, ${name}! 🌿`, 'success');
+        try {
+          const { auth, updateProfile } = window._fb;
+          const name = document.getElementById('otp-name')?.value || 'Customer';
+          // Use existing user if already signed in, otherwise create anonymous session
+          if (auth.currentUser) {
+            await updateProfile(auth.currentUser, { displayName: name });
+            window.currentUser = auth.currentUser;
+          } else {
+            const { signInAnonymously } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+            const cred = await signInAnonymously(auth);
+            await updateProfile(cred.user, { displayName: name });
+            window.currentUser = cred.user;
+          }
+          closeModal('modal-auth');
+          showToast(`Welcome, ${name}! 🌿`, 'success');
+          const btn = document.getElementById('nav-account-btn');
+          if (btn) {
+            btn.textContent = '👤 ' + (name.split(' ')[0] || 'Account');
+            btn.onclick = () => window.showPage('account');
+          }
+        } catch(e) {
+          // OTP verified but anonymous auth failed — still let them in
+          closeModal('modal-auth');
+          showToast('Verified! Welcome. 🌿', 'success');
+        }
       });
     } else {
       showToast('Incorrect OTP. Try again.', 'error');
