@@ -4,8 +4,7 @@ exports.handler = async function(event) {
   }
 
   const { to_name, to_email, order_id, items, total } = JSON.parse(event.body);
-  const RESEND_API_KEY = re_VPFnYEvD_23bMwRXXyq6mKjPL48RsY6LW;
-
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
