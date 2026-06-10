@@ -48,11 +48,14 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
     const data = await response.json();
     if (response.ok) {
+      console.log('Email sent successfully:', data);
       return { statusCode: 200, body: JSON.stringify({ success: true }) };
     } else {
+      console.error('Resend rejected email. Status:', response.status, 'Response:', JSON.stringify(data));
       return { statusCode: 400, body: JSON.stringify({ success: false, error: data }) };
     }
   } catch (err) {
+    console.error('send-confirmation crashed:', err.message);
     return { statusCode: 500, body: JSON.stringify({ success: false, error: err.message }) };
   }
 };
