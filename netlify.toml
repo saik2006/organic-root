@@ -1,0 +1,22 @@
+[build]
+  functions = "netlify/functions"
+
+# Block direct access to admin panel from public
+[[redirects]]
+  from = "/admin.html"
+  to = "/404.html"
+  status = 404
+  force = true
+
+# Serve admin only from obscure path
+[[redirects]]
+  from = "/manage-or-internal"
+  to = "/admin.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
