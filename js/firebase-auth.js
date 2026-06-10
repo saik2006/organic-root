@@ -129,29 +129,67 @@ async function verifyOTP(otp) {
     if (data.success) {
       waitForFb(async () => {
         try {
-          const { auth, updateProfile } = window._fb;
-          const name = document.getElementById('otp-name')?.value || 'Customer';
-          // Use existing user if already signed in, otherwise create anonymous session
-          if (auth.currentUser) {
-            await updateProfile(auth.currentUser, { displayName: name });
-            window.currentUser = auth.currentUser;
+          const { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, doc, setDoc, getDoc } = window._fb;
+          const name = document.getElementById('otp-name')?.value.trim() || 'Customer';
+          const phone = document.getElementById('otp-phone')?.value.trim().replace(/^0/, '');
+          const phoneEmail = `91${phone}@organicroot.phone`;
+          // Stable password derived from phone — not a security measure, just satisfies Firebase email/password requirement
+          const phonePassword = `OR_${phone}_ph`;
+
+          let cred;
+          let isNewUser = false;
+
+          try {
+            // Try signing in first — returning OTP user
+            cred = await signInWithEmailAndPassword(auth, phoneEmail, phonePassword);
+          } catch (signInErr) {
+            if (signInErr.code === 'auth/user-not-found' || signInErr.code === 'auth/invalid-credential') {
+              // New user — create a real account
+              cred = await createUserWithEmailAndPassword(auth, phoneEmail, phonePassword);
+              isNewUser = true;
+            } else {
+              throw signInErr;
+            }
+          }
+
+          // Update display name
+          await updateProfile(cred.user, { displayName: name });
+          window.currentUser = cred.user;
+
+          if (isNewUser) {
+            // Store in Firestore — same structure as email signup
+            await setDoc(doc(db, 'users', cred.user.uid), {
+              name,
+              phone: `+91${phone}`,
+              email: phoneEmail,
+              loginMethod: 'otp',
+              role: 'customer',
+              createdAt: new Date().toISOString(),
+            });
           } else {
-            const { signInAnonymously } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
-            const cred = await signInAnonymously(auth);
-            await updateProfile(cred.user, { displayName: name });
-            window.currentUser = cred.user;
+            // Returning user — update name if changed
+            const snap = await getDoc(doc(db, 'users', cred.user.uid));
+            if (snap.exists() && snap.data().name !== name) {
+              await setDoc(doc(db, 'users', cred.user.uid), { name }, { merge: true });
+              await updateProfile(cred.user, { displayName: name });
+            }
           }
+
           closeModal('modal-auth');
-          showToast(`Welcome, ${name}! 🌿`, 'success');
-          const btn = document.getElementById('nav-account-btn');
-          if (btn) {
-            btn.textContent = '👤 ' + (name.split(' ')[0] || 'Account');
-            btn.onclick = () => window.showPage('account');
+          const greeting = isNewUser ? `Welcome to OrganicRoot, ${name}! 🌿` : `Welcome back, ${name}! 🌿`;
+          showToast(greeting, 'success');
+
+          const navBtn = document.getElementById('nav-account-btn');
+          if (navBtn) {
+            navBtn.textContent = '👤 ' + (name.split(' ')[0] || 'Account');
+            navBtn.onclick = () => window.showPage('account');
           }
+
+          if (typeof renderAccountPage === 'function') renderAccountPage();
+
         } catch(e) {
-          // OTP verified but anonymous auth failed — still let them in
-          closeModal('modal-auth');
-          showToast('Verified! Welcome. 🌿', 'success');
+          console.error('OTP auth error:', e);
+          showToast('Verification succeeded but sign-in failed. Please try again.', 'error');
         }
       });
     } else {
