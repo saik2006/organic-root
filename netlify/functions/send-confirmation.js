@@ -35,7 +35,7 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
               <p style="font-size:16px;font-weight:700;color:#3d2b1f"><strong>Total Paid: ${total}</strong></p>
             </div>
             <div style="background:#eef1e6;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
-              <p style="font-size:14px;color:#5a6e3a;font-weight:600">Your order will be delivered within 24 hours.</p>
+              <p style="font-size:14px;color:#5a6e3a;font-weight:600">Your order will be delivered within 48 hours.</p>
             </div>
             <p style="text-align:center;font-size:12px;color:#8a6a50">
               Questions? Reply to this email or contact us at hello@organicroot.in<br>
