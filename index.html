@@ -72,7 +72,7 @@
   <!-- Trust Bar -->
   <div class="trust-bar">
     <div class="trust-item"><div class="ti-icon">🌱</div> 100% Certified Organic</div>
-    <div class="trust-item"><div class="ti-icon">🚚</div> Same-Day Delivery</div>
+    <div class="trust-item"><div class="ti-icon">🚚</div> 48hr Delivery</div>
     <div class="trust-item"><div class="ti-icon">🔄</div> Easy Returns</div>
     <div class="trust-item"><div class="ti-icon">❄️</div> Cold Chain Maintained</div>
     <div class="trust-item"><div class="ti-icon">💳</div> Secure Payments</div>
@@ -646,7 +646,7 @@ async function trackOrder() {
   result.innerHTML = `<div class="card-block" style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div><p style="margin-top:16px;color:var(--text-muted)">Looking up order…</p></div>`;
 
   if (!window._fb) {
-    result.innerHTML = renderFakeTracking(input);
+    result.innerHTML = `<div class="card-block"><p style="text-align:center;color:var(--text-muted);padding:24px">Service unavailable. Please refresh the page and try again.</p></div>`;
     return;
   }
 
@@ -694,9 +694,7 @@ async function trackOrder() {
   }
 }
 
-function renderFakeTracking(orderId) {
-  return `<div class="card-block"><p style="text-align:center;color:var(--text-muted);padding:24px">Connect to Firebase to enable real order tracking. Order ID: <strong>${orderId}</strong></p></div>`;
-}
+
 </script>
 
 <!-- Firebase loads AFTER page content, so it never blocks rendering -->
