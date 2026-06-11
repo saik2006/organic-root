@@ -15,7 +15,7 @@ exports.handler = async function(event) {
       },
       body: JSON.stringify({
         from: 'OrganicRoot <onboarding@resend.dev>',
-        to: ['saikarthi2006@gmail.com'],
+        to: ['plasigoventures@gmail.com'],
         subject: '🌿 New Newsletter Subscriber — OrganicRoot',
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f9f4ec;border-radius:16px">
