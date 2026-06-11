@@ -696,26 +696,109 @@ function renderUserOrders(orders, container) {
 // ── Blog Page ──────────────────────────────────────────────
 function renderBlogPage() {
   const articles = [
-    { emoji: '🥗', tag: 'Nutrition', title: 'Why Organic Food Is Better for Your Gut Health', date: 'May 2026', desc: 'Research consistently shows that organic produce carries fewer pesticide residues — and your gut microbiome pays attention to that difference.' },
-    { emoji: '🌱', tag: 'Farming', title: 'How We Source Our Vegetables: Farm to Doorstep', date: 'April 2026', desc: 'Every morning, our partner farms harvest overnight. By 7am they\'re on our trucks. Here\'s what that supply chain looks like end-to-end.' },
-    { emoji: '🧑‍🍳', tag: 'Recipes', title: '5 Quick Recipes Using Only What\'s In Season Now', date: 'May 2026', desc: 'Seasonal eating isn\'t just an Instagram trend — it means better flavour, better nutrition, and better value. Five recipes you can make this week.' },
-    { emoji: '🐄', tag: 'Dairy', title: 'A2 vs A1 Milk: What the Science Actually Says', date: 'March 2026', desc: 'The A2 debate has a lot of noise. We dug into the peer-reviewed research so you don\'t have to. Here\'s a clear-eyed look at the evidence.' },
-    { emoji: '🌾', tag: 'Grains', title: 'Ancient Grains Are Making a Comeback — Here\'s Why', date: 'April 2026', desc: 'Ragi, jowar, bajra: India\'s traditional millets are nutritionally superior to polished wheat and rice. Here\'s why chefs and nutritionists are taking them seriously.' },
-    { emoji: '🍯', tag: 'Ingredients', title: 'Everything You Need to Know About Raw Honey', date: 'February 2026', desc: 'Supermarket honey is often heated, filtered, and blended. Raw honey isn\'t. Here\'s how to tell the difference and why it matters for your health.' },
+    {
+      emoji: '🔍', tag: 'Trust', title: 'Why Certified Organic Actually Matters (And How to Spot Fake Claims)',
+      date: 'June 2026', readTime: '6 min read',
+      desc: 'The word "organic" is everywhere — but most of it is marketing. Here\'s what genuine certification means and how to tell the difference.',
+      content: `
+        <p>Walk into any supermarket today and you'll find shelves full of products with words like "natural", "farm-fresh", "chemical-free", and "organic". The problem? In India, only one of those words is legally regulated. The rest are marketing.</p>
+        <h3>What "Certified Organic" Actually Means</h3>
+        <p>Genuine organic certification in India is governed by two systems: NPOP (National Programme for Organic Production) for export-grade produce, and PGS-India (Participatory Guarantee System) for domestically sold food. Both require farmers to:</p>
+        <ul>
+          <li>Avoid synthetic pesticides, herbicides, and chemical fertilisers for a minimum of 3 years before certification</li>
+          <li>Undergo annual inspection by a third-party certifying body</li>
+          <li>Maintain detailed farm records that can be audited at any time</li>
+          <li>Use only approved inputs for soil health and pest control</li>
+        </ul>
+        <p>This is not a one-time process. Certification is renewed every year, and any violation results in immediate suspension.</p>
+        <h3>What "Natural" and "Chemical-Free" Mean</h3>
+        <p>Nothing. These terms have no legal definition in India's food labelling regulations. Any brand can print them on any product without any verification whatsoever. A tomato grown with synthetic pesticides can legally be called "natural" if the farmer chooses to call it that.</p>
+        <h3>How to Spot Fake Organic Claims</h3>
+        <p>Before buying from any organic brand, ask three questions:</p>
+        <ul>
+          <li><strong>Which certifying body issued the certificate?</strong> Legitimate certifiers include APOF, INDOCERT, LACON, and OneCert Asia. A real brand will name them without hesitation.</li>
+          <li><strong>Can I see the certificate?</strong> Every certified farm has a physical certificate with a unique registration number. Legitimate brands display this or share it on request.</li>
+          <li><strong>Which farms supply you?</strong> Transparent brands name their farm partners. Vague answers like "we source from trusted farmers across India" are a red flag.</li>
+        </ul>
+        <h3>Why It Matters for Your Health</h3>
+        <p>A 2019 study published in JAMA Internal Medicine found that regular consumption of organic food was associated with a significantly lower risk of certain cancers. The mechanism is straightforward — fewer synthetic pesticide residues entering your body over time means less cumulative toxic load on your liver, gut, and endocrine system.</p>
+        <p>Children are particularly vulnerable. Their bodies absorb pesticide residues at higher rates than adults, and their developing nervous systems are more sensitive to the effects.</p>
+        <h3>Our Commitment</h3>
+        <p>Every product on OrganicRoot comes from PGS-India or NPOP certified farms. We visit our farm partners regularly, maintain full traceability from field to doorstep, and are happy to share certification documentation for any product on request. If we can't show you the certificate, we don't sell the product.</p>
+      `
+    },
+    {
+      emoji: '❄️', tag: 'Delivery', title: 'The Cold Chain: How We Keep Your Vegetables Fresh From Farm to Door',
+      date: 'June 2026', readTime: '5 min read',
+      desc: 'Most grocery delivery companies pick from a warehouse. We don\'t. Here\'s what our 48-hour farm-to-door supply chain actually looks like.',
+      content: `
+        <p>When a vegetable is harvested, a clock starts ticking. Every hour at room temperature, it loses moisture, nutritional density, and flavour. By the time most supermarket vegetables reach your kitchen — typically 5 to 10 days after harvest — they've lost up to 50% of certain vitamins.</p>
+        <p>We built our entire operation around one goal: get the food from the farm to your door before that clock runs out.</p>
+        <h3>How Conventional Grocery Supply Chains Work</h3>
+        <p>A typical vegetable's journey in India looks like this: farm → mandi (wholesale market) → distributor warehouse → retailer → customer. Each handoff adds 1-3 days. Total time from harvest to your plate: 7-14 days, often without consistent refrigeration throughout.</p>
+        <p>Even most "fresh delivery" apps follow a version of this model — they just add a last-mile delivery step on top of the same warehouse-based supply chain.</p>
+        <h3>Our 48-Hour Supply Chain</h3>
+        <p>We eliminated the middlemen. Here's exactly what happens with your order:</p>
+        <ul>
+          <li><strong>Evening (Day 0):</strong> You place your order. It's transmitted directly to the relevant farm partner.</li>
+          <li><strong>Early morning (Day 1):</strong> Farm harvests only what has been ordered — no excess sitting in storage. Produce is packed at the farm in ventilated crates and loaded onto our refrigerated vehicles by 5am.</li>
+          <li><strong>Morning (Day 1):</strong> Produce arrives at our sorting facility. Each item is inspected, weighed, and packed into your order bag. Temperature is maintained throughout.</li>
+          <li><strong>Delivery (Day 1-2):</strong> Your order goes out for delivery in insulated bags. We deliver within 48 hours of harvest, guaranteed.</li>
+        </ul>
+        <h3>Why Cold Chain Matters</h3>
+        <p>Leafy greens like spinach and methi begin wilting within 4 hours at temperatures above 25°C. Tomatoes lose their lycopene content rapidly above 20°C. Dairy products can develop harmful bacterial growth within hours outside refrigeration.</p>
+        <p>Our cold chain maintains 2-8°C from farm to your door for temperature-sensitive items, and 10-15°C for produce that needs cool but not cold conditions — like bananas and root vegetables.</p>
+        <h3>What This Means for You</h3>
+        <p>Vegetables that arrive at your door having been harvested within 48 hours taste different. This isn't marketing language — it's the difference between a tomato that was allowed to ripen on the vine and one that was picked green and ripened artificially in transit. It's spinach that holds its structure when cooked instead of turning to mush. It's milk that tastes like milk.</p>
+        <p>We're not the cheapest option. We're not trying to be. We're trying to be the most honest one.</p>
+      `
+    },
+    { emoji: '🥗', tag: 'Nutrition', title: 'Why Organic Food Is Better for Your Gut Health', date: 'May 2026', readTime: '5 min read', desc: 'Research consistently shows that organic produce carries fewer pesticide residues — and your gut microbiome pays attention to that difference.', content: null },
+    { emoji: '🌱', tag: 'Farming', title: 'How We Source Our Vegetables: Farm to Doorstep', date: 'April 2026', readTime: '5 min read', desc: 'Every morning, our partner farms harvest overnight. By 7am they\'re on our trucks. Here\'s what that supply chain looks like end-to-end.', content: null },
+    { emoji: '🐄', tag: 'Dairy', title: 'A2 vs A1 Milk: What the Science Actually Says', date: 'March 2026', readTime: '5 min read', desc: 'The A2 debate has a lot of noise. We dug into the peer-reviewed research so you don\'t have to. Here\'s a clear-eyed look at the evidence.', content: null },
+    { emoji: '🌾', tag: 'Grains', title: 'Ancient Grains Are Making a Comeback — Here\'s Why', date: 'April 2026', readTime: '5 min read', desc: 'Ragi, jowar, bajra: India\'s traditional millets are nutritionally superior to polished wheat and rice. Here\'s why chefs and nutritionists are taking them seriously.', content: null },
   ];
+
+  window._blogArticles = articles;
 
   const grid = document.getElementById('blog-grid');
   if (!grid) return;
-  grid.innerHTML = articles.map(a => `
-    <div class="blog-card">
+  grid.innerHTML = articles.map((a, i) => `
+    <div class="blog-card" onclick="openBlogArticle(${i})" style="cursor:pointer">
       <div class="blog-img">${a.emoji}</div>
       <div class="blog-content">
         <div class="blog-tag">${a.tag}</div>
         <h3>${a.title}</h3>
         <p>${a.desc}</p>
-        <div class="blog-meta"><span>📅 ${a.date}</span><span>5 min read</span></div>
+        <div class="blog-meta"><span>📅 ${a.date}</span><span>${a.readTime}</span></div>
       </div>
     </div>`).join('');
+}
+
+function openBlogArticle(index) {
+  const a = window._blogArticles?.[index];
+  if (!a) return;
+  if (!a.content) {
+    showToast('Full article coming soon!', 'success');
+    return;
+  }
+  const modal = document.createElement('div');
+  modal.id = 'blog-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:20px;max-width:720px;width:100%;padding:48px;position:relative;margin:auto">
+      <button onclick="document.getElementById('blog-modal').remove()" style="position:absolute;top:20px;right:20px;background:none;border:none;font-size:24px;cursor:pointer;color:#888">✕</button>
+      <div style="font-size:48px;margin-bottom:12px">${a.emoji}</div>
+      <span style="background:#eef1e6;color:#5a6e3a;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:1px">${a.tag}</span>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;color:#1e140d;margin:16px 0 8px;line-height:1.3">${a.title}</h2>
+      <div style="font-size:13px;color:#8a6a50;margin-bottom:32px">📅 ${a.date} &nbsp;·&nbsp; ${a.readTime}</div>
+      <div style="font-size:15px;line-height:1.8;color:#2d2d2d;font-family:'DM Sans',sans-serif">
+        <style>#blog-modal h3{font-family:'Cormorant Garamond',serif;font-size:20px;color:#3d2b1f;margin:28px 0 10px}#blog-modal p{margin-bottom:16px}#blog-modal ul{margin:0 0 16px 24px}#blog-modal li{margin-bottom:8px}</style>
+        ${a.content}
+      </div>
+    </div>`;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
 }
 
 // ── Contact Form ───────────────────────────────────────────
