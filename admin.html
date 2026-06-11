@@ -1066,7 +1066,7 @@
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       // Simple email-based admin check — no Firestore needed
-      const ADMIN_EMAILS = ['saikarthi2006@gmail.com'];
+      const ADMIN_EMAILS = ['plasigoventures@gmail.com'];
       if (ADMIN_EMAILS.includes(user.email)) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('sidebar').style.display = 'flex';
