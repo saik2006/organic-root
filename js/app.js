@@ -322,6 +322,10 @@ function renderCheckoutStep() {
         <input type="text" id="co-name" placeholder="Your name" value="${window.currentUser?.displayName || ''}">
       </div>
       <div class="form-group">
+        <label>Email (for order confirmation)</label>
+        <input type="email" id="co-email" placeholder="your@email.com" value="${checkoutData.email || (window.currentUser?.email?.includes('@organicroot.phone') ? '' : window.currentUser?.email || '')}">
+      </div>
+      <div class="form-group">
         <label>Phone Number</label>
         <input type="tel" id="co-phone" placeholder="+91 XXXXX XXXXX" value="${checkoutData.phone || ''}">
       </div>
@@ -355,11 +359,12 @@ function renderCheckoutStep() {
 
     document.getElementById('co-next-1').onclick = () => {
       const name = document.getElementById('co-name').value.trim();
+      const email = document.getElementById('co-email').value.trim();
       const phone = document.getElementById('co-phone').value.trim();
       const address = document.getElementById('co-address').value.trim();
       if (!name || !phone || !address) { showToast('Please fill in all fields', 'error'); return; }
       const deliverySlot = document.getElementById('co-time').value.includes('Morning') ? 'morning' : document.getElementById('co-time').value.includes('Afternoon') ? 'afternoon' : 'evening';
-      checkoutData = { ...checkoutData, name, phone, address, deliverySlot };
+      checkoutData = { ...checkoutData, name, email, phone, address, deliverySlot };
       checkoutStep = 2;
       renderCheckoutStep();
     };
@@ -562,13 +567,14 @@ async function saveOrder(orderId) {
 
   // ── Send order confirmation email via Resend (Netlify function) ──
   try {
-    if (window.currentUser?.email) {
+    const confirmEmail = checkoutData.email || window.currentUser?.email;
+    if (confirmEmail && !confirmEmail.includes('@organicroot.phone')) {
       await fetch('/.netlify/functions/send-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to_name: checkoutData.name,
-          to_email: window.currentUser.email,
+          to_email: confirmEmail,
           order_id: orderId,
           items: orderItems.map(i => `${i.name} x${i.qty} — ₹${i.price * i.qty}`).join('\n'),
           total: `₹${discountedTotal()}`,
