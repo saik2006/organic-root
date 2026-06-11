@@ -825,7 +825,7 @@ function setupContactForm() {
           from_email: email,
           subject: subject || 'Message from OrganicRoot website',
           message,
-          to_email: 'hello@organicroot.in',
+          to_email: 'plasigoventures@gmail.com',
         });
       }
       showToast('✉️ Message sent! We\'ll reply within 24 hours.', 'success');
