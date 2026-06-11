@@ -31,6 +31,9 @@ function showPage(page) {
   document.getElementById('page-contact')?.classList.toggle('active', page === 'contact');
   document.getElementById('page-blog')?.classList.toggle('active', page === 'blog');
   document.getElementById('page-track')?.classList.toggle('active', page === 'track');
+  document.getElementById('page-terms')?.classList.toggle('active', page === 'terms');
+  document.getElementById('page-privacy')?.classList.toggle('active', page === 'privacy');
+  document.getElementById('page-refund')?.classList.toggle('active', page === 'refund');
 
   if (page === 'shop') renderShopPage();
   if (page === 'account') renderAccountPage();
