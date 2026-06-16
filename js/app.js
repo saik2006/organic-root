@@ -517,7 +517,7 @@ async function processPayment() {
 
     // Open Razorpay checkout
     const options = {
-      key: 'rzp_test_T2Ce6NBvWwCbcn',
+      key: 'rzp_live_T2D93tAH2UWSWJ',
       amount: data.amount,
       currency: 'INR',
       name: 'OrganicRoot',
