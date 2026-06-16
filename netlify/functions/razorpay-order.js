@@ -6,7 +6,7 @@ exports.handler = async function(event) {
   }
 
   const { amount, currency = 'INR', receipt } = JSON.parse(event.body);
-  const KEY_ID = 'rzp_test_SyZvVHChjEZ6hO';
+  const KEY_ID = process.env.RAZORPAY_KEY_ID;
   const KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
 
   const auth = Buffer.from(`${KEY_ID}:${KEY_SECRET}`).toString('base64');
