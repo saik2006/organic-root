@@ -1056,6 +1056,16 @@
       }
       document.getElementById('admin-name').textContent = cred.user.displayName || 'Admin';
     } catch(e) {
+      console.error('Admin login error:', e.code, e.message);
+      if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
+        err.textContent = 'Incorrect email or password.';
+      } else if (e.code === 'auth/too-many-requests') {
+        err.textContent = 'Too many attempts. Try again later.';
+      } else if (e.code === 'auth/invalid-email') {
+        err.textContent = 'Invalid email address.';
+      } else {
+        err.textContent = 'Login failed: ' + e.message;
+      }
       err.style.display = 'block';
       btn.textContent = 'Sign In to Admin'; btn.disabled = false;
     }
@@ -1780,7 +1790,105 @@ async function bulkUpdateSlot() {
 }
 </script>
 
+// ── NEWSLETTER ──
+async function loadNewsletter() {
+  const tbody = document.getElementById('newsletter-table-body');
+  if (!tbody) return;
+  try {
+    const { collection, getDocs, query, orderBy } = window._fb2;
+    const snap = await getDocs(query(collection(window._db, 'newsletter'), orderBy('subscribedAt', 'desc')));
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;padding:40px;color:#888">No subscribers yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    snap.forEach(d => {
+      const s = d.data();
+      const date = s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString('en-IN') : '—';
+      tbody.innerHTML += `<tr><td>${s.email || '—'}</td><td>${date}</td></tr>`;
+    });
+  } catch(err) {
+    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;padding:40px;color:#e53e3e">Failed to load subscribers.</td></tr>';
+    console.error('loadNewsletter error:', err);
+  }
+}
+
+function exportSubscribersCSV() {
+  const rows = document.querySelectorAll('#newsletter-table-body tr');
+  if (!rows.length) { toast('No subscribers to export', 'error'); return; }
+  let csv = 'Email,Subscribed On\n';
+  rows.forEach(r => {
+    const cells = r.querySelectorAll('td');
+    if (cells.length === 2) csv += `${cells[0].textContent},${cells[1].textContent}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'organicroot_subscribers.csv';
+  a.click();
+}
+
+// ── COUPONS ──
+async function renderCouponsPanel() {
+  const tbody = document.getElementById('coupons-table-body');
+  if (!tbody) return;
+  try {
+    const { collection, getDocs } = window._fb2;
+    const snap = await getDocs(collection(window._db, 'coupons'));
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#888">No coupons yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    snap.forEach(d => {
+      const c = d.data();
+      tbody.innerHTML += `
+        <tr>
+          <td><strong>${c.code || '—'}</strong></td>
+          <td>${c.discount || 0}%</td>
+          <td>${c.description || '—'}</td>
+          <td><button class="btn btn-sm" style="background:#fee2e2;color:#e53e3e;border:none;padding:4px 12px;border-radius:6px;cursor:pointer" onclick="deleteCoupon('${d.id}')">Delete</button></td>
+        </tr>`;
+    });
+  } catch(err) {
+    console.error('renderCouponsPanel error:', err);
+  }
+}
+
+async function addCoupon() {
+  const code = document.getElementById('cp-code')?.value.trim().toUpperCase();
+  const value = parseInt(document.getElementById('cp-value')?.value);
+  const desc = document.getElementById('cp-desc')?.value.trim();
+  if (!code || !value || !desc) { toast('Fill in all coupon fields', 'error'); return; }
+  if (value < 1 || value > 100) { toast('Discount must be between 1 and 100', 'error'); return; }
+  try {
+    const { collection, addDoc } = window._fb2;
+    await addDoc(collection(window._db, 'coupons'), { code, discount: value, description: desc, createdAt: new Date().toISOString() });
+    document.getElementById('cp-code').value = '';
+    document.getElementById('cp-value').value = '';
+    document.getElementById('cp-desc').value = '';
+    toast(`Coupon ${code} added`, 'success');
+    renderCouponsPanel();
+  } catch(err) {
+    toast('Failed to add coupon', 'error');
+    console.error('addCoupon error:', err);
+  }
+}
+
+async function deleteCoupon(id) {
+  if (!confirm('Delete this coupon?')) return;
+  try {
+    const { doc, deleteDoc } = window._fb2;
+    await deleteDoc(doc(window._db, 'coupons', id));
+    toast('Coupon deleted', 'success');
+    renderCouponsPanel();
+  } catch(err) {
+    toast('Failed to delete coupon', 'error');
+  }
+}
+
 <!-- Load products.js for fallback product data -->
 <script src="js/products.js"></script>
 </body>
 </html>
+  
